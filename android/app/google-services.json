@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "550630230566",
+    "project_id": "jacleaner-afa48",
+    "storage_bucket": "jacleaner-afa48.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:550630230566:android:f7afbebff3efc1ffa2b4e7",
+        "android_client_info": {
+          "package_name": "com.example.jaclean"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD44O6J0sgTTgbUVbTOP35T69Eq48-X_zs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
