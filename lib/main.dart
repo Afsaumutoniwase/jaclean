@@ -10,6 +10,7 @@ import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/screens/auth/register_screen.dart';
 import 'presentation/screens/auth/onboarding_screen.dart';
 import 'presentation/utils/bottom_nav.dart';
+import 'presentation/screens/service_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,7 +55,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _pages = [
     const HomePage(),
-    const MarketPage(), // Example placeholder
+    const ServicePage(), 
     const ProfilePage(),
     const ReviewsPage(),
   ];
