@@ -12,6 +12,7 @@ import 'presentation/screens/auth/onboarding_screen.dart';
 import 'presentation/utils/bottom_nav.dart';
 import 'presentation/screens/service_page.dart';
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -37,6 +38,7 @@ class MyApp extends StatelessWidget {
         '/register': (context) => RegisterScreen(),
         '/onboarding': (context) => OnboardingScreen(),
         '/home': (context) => MainScreen(),
+
       },
     );
   }
@@ -55,9 +57,11 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _pages = [
     const HomePage(),
-    const ServicePage(), 
+    const ServicePage(),
+    const MarketPage(),
     const ProfilePage(),
     const ReviewsPage(),
+
   ];
 
   void _onItemTapped(int index) {
