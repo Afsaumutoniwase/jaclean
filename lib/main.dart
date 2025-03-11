@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'presentation/screens/home_page.dart';
-import 'presentation/screens/profile_page.dart'; // Example additional screen
+import 'presentation/screens/profile_page.dart';
 import 'presentation/screens/market_page.dart';
 import 'presentation/screens/reviews_page.dart';
 import 'presentation/screens/auth/splash_screen.dart';
@@ -11,7 +11,6 @@ import 'presentation/screens/auth/register_screen.dart';
 import 'presentation/screens/auth/onboarding_screen.dart';
 import 'presentation/utils/bottom_nav.dart';
 import 'presentation/screens/service_page.dart';
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,7 +37,6 @@ class MyApp extends StatelessWidget {
         '/register': (context) => RegisterScreen(),
         '/onboarding': (context) => OnboardingScreen(),
         '/home': (context) => MainScreen(),
-
       },
     );
   }
@@ -61,7 +59,6 @@ class _MainScreenState extends State<MainScreen> {
     const MarketPage(),
     const ProfilePage(),
     const ReviewsPage(),
-
   ];
 
   void _onItemTapped(int index) {
