@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class OnboardingScreen extends StatefulWidget {
   @override
@@ -14,9 +16,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String? _selectedLocation;
   String? _selectedCenter;
   bool _acceptedTerms = false;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
+    final user = _auth.currentUser;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -32,7 +38,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   });
                 },
                 children: [
-                  _buildWelcomePage(),
+                  _buildWelcomePage(user?.email),
                   _buildAvatarPage(),
                   _buildLocationPage(),
                   _buildCenterPage(),
@@ -77,7 +83,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _buildWelcomePage() {
+  Widget _buildWelcomePage(String? email) {
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -92,11 +98,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
           SizedBox(height: 16),
-          Text(
-            'Thank you for joining our eco-friendly community',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-          ),
+         
+          if (email != null)
+            Text(
+              'Thank you for joining our eco-friendly community $email, let/s grab some details to get started.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
           SizedBox(height: 32),
           TextField(
             onChanged: (value) => setState(() => _userName = value),
@@ -291,7 +299,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      // Navigate to home screen
+      _submitOnboardingData();
+    }
+  }
+
+  Future<void> _submitOnboardingData() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      await _firestore.collection('users').doc(user.uid).set({
+        'userName': _userName,
+        'selectedAvatar': _selectedAvatar,
+        'selectedLocation': _selectedLocation,
+        'selectedCenter': _selectedCenter,
+        'acceptedTerms': _acceptedTerms,
+      });
       Navigator.of(context).pushReplacementNamed('/home');
     }
   }

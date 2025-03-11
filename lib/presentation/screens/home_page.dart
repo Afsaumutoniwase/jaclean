@@ -1,10 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
+  Future<String?> _getUserName() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      return doc.data()?['userName'] as String?;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).primaryColor;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF0F8F4), // Light green background
       body: SingleChildScrollView(
@@ -17,34 +33,85 @@ class HomePage extends StatelessWidget {
             // Greeting & Cart Icon Section in One Row
             Row(
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text("Hello,", style: TextStyle(fontSize: 18)),
-                    SizedBox(height: 10), // Adds slight spacing between "Hello," and "Simeon Azeh"
-                    Text(
-                      "Simeon Azeh",
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.green),
-                    ),
-                  ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Hello,",
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.grey[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      FutureBuilder<String?>(
+                        future: _getUserName(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            );
+                          }
+                          return Text(
+                            snapshot.data ?? "User",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: primaryColor,
+                              letterSpacing: 0.5,
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-
-                const Spacer(), // Pushes the cart icon to the right
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(12), // Rounded edges
+                    borderRadius: BorderRadius.circular(15),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
+                        color: Colors.grey.withOpacity(0.1),
                         spreadRadius: 2,
-                        blurRadius: 4,
+                        blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  padding: const EdgeInsets.all(10),
-                  child: const Icon(Icons.shopping_cart_outlined, color: Colors.black),
+                  padding: const EdgeInsets.all(12),
+                  child: Stack(
+                    children: [
+                      const Icon(
+                        Icons.shopping_cart_outlined,
+                        color: Colors.black87,
+                        size: 26,
+                      ),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: primaryColor,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Text(
+                            "2",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -140,16 +207,16 @@ class HomePage extends StatelessWidget {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
-        margin: const EdgeInsets.only(right: 8),
+        margin: const EdgeInsets.symmetric(horizontal: 6),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
+              color: Colors.grey.withOpacity(0.1),
               spreadRadius: 2,
-              blurRadius: 5,
-              offset: const Offset(0, 2),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -158,34 +225,47 @@ class HomePage extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(icon, size: 28, color: iconColor),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: iconColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, size: 24, color: iconColor),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     title,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      height: 1.2,
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: iconColor,
-                  ),
-                ),
-                const SizedBox(width: 5),
-                const Text("kg ▼", style: TextStyle(fontSize: 14, color: Colors.black54)),
-              ],
+            const SizedBox(height: 16),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: iconColor,
+                letterSpacing: -0.5,
+              ),
             ),
             if (description.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text(description, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                  height: 1.4,
+                ),
+              ),
             ],
           ],
         ),
@@ -195,19 +275,39 @@ class HomePage extends StatelessWidget {
 
   /// **Builds the Quick Action buttons**
   Widget _buildQuickAction(String label, IconData icon) {
-    return Column(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.green.withOpacity(0.1),
+    return Container(
+      width: 80,
+      child: Column(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.green.withOpacity(0.1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.green.withOpacity(0.1),
+                  spreadRadius: 2,
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Icon(icon, size: 28, color: Colors.green),
           ),
-          padding: const EdgeInsets.all(12),
-          child: Icon(icon, size: 28, color: Colors.green),
-        ),
-        const SizedBox(height: 5),
-        Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12)),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[800],
+              height: 1.2,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
