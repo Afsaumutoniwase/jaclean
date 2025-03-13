@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../widgets/custom_elevated_btn.dart';
 import '../../widgets/custom_full_elevated_btn.dart';
 import '../../widgets/custom_title.dart';
 import 'withdrawal_success.dart';
+import '../../../main.dart'; // Import the main.dart file to access the bottom navigation bar
+
 class WithdrawalScreen extends StatefulWidget {
   const WithdrawalScreen({super.key});
 
@@ -11,23 +15,30 @@ class WithdrawalScreen extends StatefulWidget {
 }
 
 class _WithdrawalScreenState extends State<WithdrawalScreen> {
-
   String amount = "50,046.00";
 
-
+  Future<String?> _getUserName() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      return doc.data()?['userName'] as String?;
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Withdraw"),),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             const SizedBox(height: 10,),
             const CustomTitle(title: "Withdrawal Methods"),
-
             Container(
               padding: const EdgeInsets.all(20.0),
               child: Column(
@@ -37,18 +48,33 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                   const SizedBox(height: 5,),
                   const Text('3399329933', style: TextStyle(fontSize: 16),),
                   const SizedBox(height: 5,),
-                  const Text('Simeon Azeh', style: TextStyle(fontSize: 16),),
+                  FutureBuilder<String?>(
+                    future: _getUserName(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        );
+                      }
+                      return Text(
+                        snapshot.data ?? "User",
+                        style: const TextStyle(fontSize: 16),
+                      );
+                    },
+                  ),
                   const SizedBox(height: 5),
                   CustomElevatedBtn(
                       onPressed: (){},
                       text: "Change Bank"),
                   const SizedBox(height: 10,),
                   const Text(
-                      "Amount",
-                      style: TextStyle(
+                    "Amount",
+                    style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600
-                      ),
+                    ),
                   ),
                   const TextField(
                     keyboardType: TextInputType.number,
@@ -60,7 +86,6 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                   const SizedBox(height:8,),
                   Container(
                     padding: EdgeInsets.all(10),
-
                     child: const Column(
                       children: [
                         Row(
@@ -69,7 +94,6 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                             Text('10% (App Fee)'),
                             Text('₦0.00'),
                           ],
-
                         ),
                         SizedBox(height: 10,),
                         Row(
@@ -94,19 +118,13 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                         MaterialPageRoute(builder: (context) => const WithdrawalSuccess() )
                     );
                   }, text: "Withdraw")
-
                 ],
-
-
               ),
             )
           ],
         ),
-
       ),
+      // bottomNavigationBar: const MainBottomNavBar(), // Use the bottom navigation bar from main.dart
     );
-
-
   }
 }
-
