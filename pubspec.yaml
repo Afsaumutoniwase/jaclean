@@ -40,6 +40,10 @@ dependencies:
   cloud_firestore: ^5.6.5
   flutter_bloc: ^9.1.0
   equatable: ^2.0.7
+  intl: ^0.17.0
+  provider: ^6.0.0
+  shared_preferences: ^2.0.6
+  image_picker: ^0.8.4+4
 
 dev_dependencies:
   flutter_test:
@@ -72,6 +76,33 @@ flutter:
   - assets/images/avatar2.png
   - assets/images/avatar3.png
   - assets/images/avatar4.png
+  - assets/images/pixel9.png
+  - assets/images/jbl_home.png
+  - assets/images/laptop1.png
+  - assets/images/clothes1.png
+  - assets/images/clothes2.png
+  - assets/images/clothes3.jpeg
+  - assets/images/clothes4.jpeg
+  - assets/images/construction1.jpeg
+  - assets/images/construction2.jpeg
+  - assets/images/construction3.jpeg
+  - assets/images/construction4.jpeg
+  - assets/images/ewaste1.jpeg
+  - assets/images/ewaste2.jpeg
+  - assets/images/ewaste3.jpeg
+  - assets/images/ewaste4.jpeg
+  - assets/images/fridge.jpeg
+  - assets/images/gas.jpeg
+  - assets/images/pot.jpeg
+  - assets/images/table.jpeg
+  - assets/images/vase1.jpeg
+  - assets/images/metal1.jpeg
+  - assets/images/metal2.jpeg
+  - assets/images/metal3.jpeg
+  - assets/images/metal4.jpeg
+
+
+
 
 # ...existing code...
 

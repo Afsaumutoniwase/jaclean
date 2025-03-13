@@ -1,22 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'presentation/screens/home_page.dart';
 import 'presentation/screens/profile_page.dart';
-import 'presentation/screens/market_page.dart';
-import 'presentation/screens/reviews_page.dart';
+import 'presentation/screens/market/market_page.dart';
+import 'presentation/screens/reviews/reviews_page.dart';
 import 'presentation/screens/auth/splash_screen.dart';
 import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/screens/auth/register_screen.dart';
 import 'presentation/screens/auth/onboarding_screen.dart';
 import 'presentation/utils/bottom_nav.dart';
 import 'presentation/screens/service_page.dart';
+import 'presentation/screens/market/cart_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CartProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -36,7 +45,11 @@ class MyApp extends StatelessWidget {
         '/login': (context) => LoginScreen(),
         '/register': (context) => RegisterScreen(),
         '/onboarding': (context) => OnboardingScreen(),
+        '/service': (context) => ServicePage(),
+        '/market': (context) => MarketPage(),
+        '/profile': (context) => ProfilePage(),
         '/home': (context) => MainScreen(),
+        '/reviews': (context) => ReviewsPage(),
       },
     );
   }

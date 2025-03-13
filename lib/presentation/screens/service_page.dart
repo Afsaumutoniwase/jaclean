@@ -1,7 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../main.dart';
 
-class ServicePage extends StatelessWidget {
+ class ServicePage extends StatelessWidget {
   const ServicePage({super.key});
+
+ Future<String?> _getUserName() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      return doc.data()?['userName'] as String?;
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,13 +41,25 @@ class ServicePage extends StatelessWidget {
                           color: Colors.black54,
                         ),
                       ),
-                      Text(
-                        'Simeon Azeh',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
+                     FutureBuilder<String?>(
+                        future: _getUserName(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            );
+                          }
+                          return Text(
+                            snapshot.data ?? "User",
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -192,6 +219,18 @@ class ServiceDetailPage extends StatefulWidget {
 
 class _ServiceDetailPageState extends State<ServiceDetailPage> {
   double _quantity = 8.0;
+
+  Future<String?> _getUserName() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      return doc.data()?['userName'] as String?;
+    }
+    return null;
+  }
   String _paymentOption = '';
   DateTime? _selectedDate;
   String _selectedTime = '10:00 AM';
@@ -375,13 +414,25 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                           color: Colors.black54,
                         ),
                       ),
-                      Text(
-                        'Simeon Azeh',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
+                   FutureBuilder<String?>(
+                        future: _getUserName(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            );
+                          }
+                          return Text(
+                            snapshot.data ?? "User",
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
