@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'cart_provider.dart';
 import '../../utils/bottom_nav.dart';
 
 class AddCardPage extends StatefulWidget {
-  const AddCardPage({super.key});
+  final double? amount;
+
+  const AddCardPage({super.key, this.amount});
 
   @override
   _AddCardPageState createState() => _AddCardPageState();
@@ -14,9 +18,13 @@ class _AddCardPageState extends State<AddCardPage> {
   final TextEditingController _cardNumberController = TextEditingController();
   final TextEditingController _expirationDateController = TextEditingController();
   final TextEditingController _cvvController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
+    final cart = Provider.of<CartProvider>(context);
+    double total = widget.amount ?? cart.cartItems.fold(0, (sum, item) => sum + double.parse(item['price']!.replaceAll('₦', '').replaceAll(',', '')));
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -111,20 +119,29 @@ class _AddCardPageState extends State<AddCardPage> {
               ),
               const SizedBox(height: 32),
               Center(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 32),
-                  ),
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      // Handle add card action
-                      Navigator.pop(context, true);
-                    }
-                  },
-                  child: const Text("Add Card", style: TextStyle(fontSize: 16, color: Colors.white)),
-                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator()
+                    : ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 32),
+                        ),
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            setState(() {
+                              _isLoading = true;
+                            });
+                            Future.delayed(const Duration(seconds: 2), () {
+                              setState(() {
+                                _isLoading = false;
+                              });
+                              _showSuccessDialog(context);
+                            });
+                          }
+                        },
+                        child: Text("Submit Order: ₦${total.toStringAsFixed(2)}", style: const TextStyle(fontSize: 16, color: Colors.white)),
+                      ),
               ),
             ],
           ),
@@ -142,6 +159,31 @@ class _AddCardPageState extends State<AddCardPage> {
           ][index]);
         },
       ),
+    );
+  }
+
+  void _showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Payment Successful"),
+          content: const Text("Your payment was successful."),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pop(context, true);
+              },
+              child: const Text("Done"),
+            ),
+          ],
+        );
+      },
     );
   }
 }

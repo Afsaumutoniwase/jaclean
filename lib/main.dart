@@ -11,7 +11,7 @@ import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/screens/auth/register_screen.dart';
 import 'presentation/screens/auth/onboarding_screen.dart';
 import 'presentation/utils/bottom_nav.dart';
-import 'presentation/screens/service_page.dart';
+import 'presentation/screens/services/service_page.dart';
 import 'presentation/screens/market/cart_provider.dart';
 
 void main() async {

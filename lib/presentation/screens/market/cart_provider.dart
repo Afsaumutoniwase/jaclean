@@ -21,4 +21,9 @@ class CartProvider with ChangeNotifier {
   bool isInCart(String name) {
     return _cartItems.any((item) => item['name'] == name);
   }
+
+  void clearCart() {
+    _cartItems.clear();
+    notifyListeners();
+  }
 }

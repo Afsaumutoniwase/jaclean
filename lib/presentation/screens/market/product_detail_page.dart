@@ -20,11 +20,6 @@ class ProductDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double oldPriceValue = double.parse(oldPrice.replaceAll('₦', '').replaceAll(',', ''));
-    double discountValue = oldPriceValue * 0.25;
-    double newPriceValue = oldPriceValue - discountValue;
-    final formattedNewPrice = NumberFormat.currency(locale: 'en_NG', symbol: '₦').format(newPriceValue);
-
     return Scaffold(
       backgroundColor: const Color(0xFFF0F8F4),
       appBar: AppBar(
@@ -82,7 +77,7 @@ class ProductDetailPage extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(formattedNewPrice, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+                  Text(price, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
                   Text(
                     oldPrice,
                     style: const TextStyle(
