@@ -3,7 +3,6 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../main.dart'; 
 
 class AddProductPage extends StatefulWidget {
   const AddProductPage({super.key});
@@ -19,6 +18,7 @@ class _AddProductPageState extends State<AddProductPage> {
   final TextEditingController _priceController = TextEditingController();
   String _itemState = 'New';
   File? _image;
+  String _uploadSection = 'Sell'; // Default to "Sell"
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -44,9 +44,14 @@ class _AddProductPageState extends State<AddProductPage> {
 
   void _postProduct() {
     if (_formKey.currentState!.validate()) {
-      // Handle post action
-      // Add the product to the market page under "ALL CATEGORIES"
-      Navigator.pop(context);
+      final product = {
+        'name': _productNameController.text,
+        'description': _productDescriptionController.text,
+        'price': _priceController.text,
+        'image': _image?.path ?? '',
+        'section': _uploadSection,
+      };
+      Navigator.pop(context, product);
     }
   }
 
@@ -207,6 +212,36 @@ class _AddProductPageState extends State<AddProductPage> {
                   }
                   return null;
                 },
+              ),
+              const SizedBox(height: 16),
+              const Text("Upload Section", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+              Row(
+                children: [
+                  Expanded(
+                    child: RadioListTile<String>(
+                      title: const Text("Sell"),
+                      value: "Sell",
+                      groupValue: _uploadSection,
+                      onChanged: (value) {
+                        setState(() {
+                          _uploadSection = value!;
+                        });
+                      },
+                    ),
+                  ),
+                  Expanded(
+                    child: RadioListTile<String>(
+                      title: const Text("Charity Donation"),
+                      value: "Charity Donation",
+                      groupValue: _uploadSection,
+                      onChanged: (value) {
+                        setState(() {
+                          _uploadSection = value!;
+                        });
+                      },
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 32),
               Center(

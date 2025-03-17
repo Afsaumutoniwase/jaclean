@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../utils/bottom_nav.dart';
+import 'cart_provider.dart';
 
 class OrderConfirmationPage extends StatelessWidget {
-  const OrderConfirmationPage({super.key});
+  final String orderNumber;
+
+  const OrderConfirmationPage({super.key, required this.orderNumber});
 
   @override
   Widget build(BuildContext context) {
@@ -42,9 +46,9 @@ class OrderConfirmationPage extends StatelessWidget {
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green),
               ),
               const SizedBox(height: 8),
-              const Text(
-                "Your order #FD2367FFG00 is confirmed",
-                style: TextStyle(fontSize: 16, color: Colors.black),
+              Text(
+                "Your order #$orderNumber is confirmed",
+                style: const TextStyle(fontSize: 16, color: Colors.black),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -67,7 +71,8 @@ class OrderConfirmationPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
                 ),
                 onPressed: () {
-                  Navigator.pop(context);
+                  Provider.of<CartProvider>(context, listen: false).clearCart();
+                  Navigator.pushReplacementNamed(context, '/home');
                 },
                 child: const Text("Done", style: TextStyle(fontSize: 16, color: Colors.white)),
               ),

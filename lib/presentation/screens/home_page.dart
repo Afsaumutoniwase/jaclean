@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'market/market_page.dart'; // Import the MarketPage
+import 'market/add_product_page.dart'; // Import the AddProductPage
+import 'map_page.dart'; // Import the MapPage
+import 'package:latlong2/latlong.dart'; // Import LatLng
+import 'services/recycling_centers_page.dart'; // Import the RecyclingCentersPage
+import 'market/shopping_cart.dart'; // Import the ShoppingCartPage
+import 'services/service_detail_page.dart'; // Import the ServiceDetailPage
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -70,47 +77,50 @@ class HomePage extends StatelessWidget {
                     ],
                   ),
                 ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        spreadRadius: 2,
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.all(12),
-                  child: Stack(
-                    children: [
-                      const Icon(
-                        Icons.shopping_cart_outlined,
-                        color: Colors.black87,
-                        size: 26,
-                      ),
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: primaryColor,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Text(
-                            "2",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
+                GestureDetector(
+                  onTap: () => _navigateToShoppingCartPage(context), // Navigate to the shopping cart page
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(12),
+                    child: Stack(
+                      children: [
+                        const Icon(
+                          Icons.shopping_cart_outlined,
+                          color: Colors.black87,
+                          size: 26,
+                        ),
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: primaryColor,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Text(
+                              "2",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -129,10 +139,10 @@ class HomePage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildQuickAction("Buy or sell\nE-waste", Icons.shopping_cart_outlined),
-                _buildQuickAction("Donate\nE-waste", Icons.volunteer_activism_outlined),
-                _buildQuickAction("Schedule\nPickup", Icons.schedule),
-                _buildQuickAction("Find Recycling\nCenters", Icons.location_searching_outlined),
+                _buildQuickAction(context, "Buy or sell\nE-waste", Icons.shopping_cart_outlined, MarketPage()),
+                _buildQuickAction(context, "Donate\nE-waste", Icons.volunteer_activism_outlined, const AddProductPage()),
+                _buildQuickAction(context, "Schedule\nPickup", Icons.schedule, ServiceDetailPage(serviceType: 'recycling')),
+                _buildQuickAction(context, "Find Recycling\nCenters", Icons.location_searching_outlined, RecyclingCentersPage()),
               ],
             ),
 
@@ -143,7 +153,7 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 5),
             Text("This is the closest location to you", style: TextStyle(color: Colors.grey[600], fontSize: 14)),
             const SizedBox(height: 10),
-            _buildRecyclingCenter("Remera E4 E-waste Center", "Kg st 101, Kigali Rwanda"),
+            _buildRecyclingCenter(context, "Remera E4 E-waste Center", "Kg st 101, Kigali Rwanda", LatLng(-1.944072, 30.089233)),
 
             const SizedBox(height: 28),
 
@@ -274,45 +284,55 @@ class HomePage extends StatelessWidget {
   }
 
   /// **Builds the Quick Action buttons**
-  Widget _buildQuickAction(String label, IconData icon) {
-    return Container(
-      width: 80,
-      child: Column(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.green.withOpacity(0.1),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.green.withOpacity(0.1),
-                  spreadRadius: 2,
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+  Widget _buildQuickAction(BuildContext context, String label, IconData icon, Widget? destination) {
+    return GestureDetector(
+      onTap: () {
+        if (destination != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => destination),
+          );
+        }
+      },
+      child: Container(
+        width: 80,
+        child: Column(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.green.withOpacity(0.1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.1),
+                    spreadRadius: 2,
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Icon(icon, size: 28, color: Colors.green),
             ),
-            padding: const EdgeInsets.all(16),
-            child: Icon(icon, size: 28, color: Colors.green),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[800],
-              height: 1.2,
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[800],
+                height: 1.2,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   /// **Builds the Recycling Center section**
-  Widget _buildRecyclingCenter(String name, String address) {
+  Widget _buildRecyclingCenter(BuildContext context, String name, String address, LatLng location) {
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -321,7 +341,18 @@ class HomePage extends StatelessWidget {
         title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(address),
         trailing: TextButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MapPage(
+                  name: name,
+                  address: address,
+                  location: location,
+                ),
+              ),
+            );
+          },
           child: const Text("View map", style: TextStyle(color: Colors.green)),
         ),
       ),
@@ -341,6 +372,13 @@ class HomePage extends StatelessWidget {
           child: const Text("View product", style: TextStyle(color: Colors.green)),
         ),
       ),
+    );
+  }
+
+  void _navigateToShoppingCartPage(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ShoppingCartPage()), // Navigate to the shopping cart page
     );
   }
 }

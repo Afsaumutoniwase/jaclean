@@ -54,7 +54,7 @@ class ShoppingCartPage extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
+      bottomNavigationBar: _buildBottomNavBar(context),
     );
   }
 
@@ -120,6 +120,7 @@ class ShoppingCartPage extends StatelessWidget {
   }
 
   Widget _buildContinueButton(BuildContext context) {
+    final cart = Provider.of<CartProvider>(context);
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 16),
@@ -129,18 +130,20 @@ class ShoppingCartPage extends StatelessWidget {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(vertical: 14),
         ),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const CheckoutPage()),
-          );
-        },
+        onPressed: cart.cartItems.isEmpty
+            ? null
+            : () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CheckoutPage()),
+                );
+              },
         child: const Text("Continue", style: TextStyle(fontSize: 16, color: Colors.white)),
       ),
     );
   }
 
-  Widget _buildBottomNavBar() {
+  Widget _buildBottomNavBar(BuildContext context) {
     return BottomNavigationBar(
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
@@ -152,6 +155,15 @@ class ShoppingCartPage extends StatelessWidget {
       selectedItemColor: Colors.green,
       unselectedItemColor: Colors.black54,
       showUnselectedLabels: true,
+      onTap: (index) {
+        Navigator.pushReplacementNamed(context, [
+          '/home',
+          '/service',
+          '/market',
+          '/profile',
+          '/reviews',
+        ][index]);
+      },
     );
   }
 }
