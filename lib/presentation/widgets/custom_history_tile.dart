@@ -18,11 +18,11 @@ class CustomHistoryTile extends StatelessWidget {
     
     Color statusColor = Colors.transparent;
     
-    if (status == 'pending'){
+    if (status == 'success'){
       statusColor = const Color(0xFF1EC77F);
     }
     
-    else if (status == 'completed'){
+    else if (status == 'success'){
       statusColor = Colors.transparent;
     }
     else if (status == 'failed'){
@@ -79,7 +79,7 @@ class CustomHistoryTile extends StatelessWidget {
           crossAxisAlignment:CrossAxisAlignment.end,
           children: [
             Text(
-              amount,
+              "₦$amount",
             style: const TextStyle(
             fontWeight: FontWeight.bold,
               fontSize: 16,
