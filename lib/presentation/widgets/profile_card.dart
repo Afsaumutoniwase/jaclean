@@ -8,7 +8,8 @@ class ProfileCard extends StatelessWidget {
 
   final String firstName;
   final String lastName;
-  final String profilePicUrl;
+
+  final String assetUrl;
 
 
 
@@ -17,7 +18,7 @@ class ProfileCard extends StatelessWidget {
     super.key,
     required this.firstName,
     required this.lastName,
-    required this.profilePicUrl,
+    required this.assetUrl
   });
 
   @override
@@ -33,10 +34,11 @@ class ProfileCard extends StatelessWidget {
 
       child: Row(
         children: [
-        const CircularAvatar(
+        CircleAvatar(
           radius:AppBorderRadius.avatar,
           backgroundColor:AppColors.backgroundLight,
-          backgroundUrl: ("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLhrdK20s0iXZZGFaTC6M9tLEZi01K0GrPLw&s")
+          backgroundImage: AssetImage(assetUrl)
+
           ),
           const SizedBox(width: 10,),
           Column(

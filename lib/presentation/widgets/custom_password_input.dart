@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 
-
 class CustomPasswordInput extends StatelessWidget {
   final String hintText;
-  const CustomPasswordInput({super.key, required this.hintText});
+  final TextEditingController? controller; // Optional controller
+
+  const CustomPasswordInput({
+    Key? key,
+    required this.hintText,
+    this.controller, // Make controller optional
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -13,15 +18,14 @@ class CustomPasswordInput extends StatelessWidget {
         borderRadius: BorderRadius.circular(5),
       ),
       child: TextField(
+        controller: controller, // Use the optional controller
         obscureText: true,
         decoration: InputDecoration(
-            border: const OutlineInputBorder(),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-            hintText: hintText,
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+          hintText: hintText,
         ),
-
       ),
-
     );
   }
 }

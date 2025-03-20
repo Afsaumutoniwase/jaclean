@@ -10,7 +10,7 @@ import '../../widgets/custom_list_tile.dart';
 import '../../widgets/profile_card.dart';
 import 'Withdrawal_History.dart';
 import 'change_password.dart';
-import '../../../main.dart'; // Import the main.dart file to access the bottom navigation bar
+import '../../../main.dart';
 
 class MainProfile extends StatefulWidget {
   const MainProfile({super.key});
@@ -20,19 +20,42 @@ class MainProfile extends StatefulWidget {
 }
 
 class _MainProfileState extends State<MainProfile> {
-  double balance = 50046.00;
 
-  Future<String?> _getUserName() async {
+  // Create a stream for user data to keep UI updated in real-time
+  Stream<DocumentSnapshot> _getUserDataStream() {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final doc = await FirebaseFirestore.instance
+      return FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
-          .get();
-      return doc.data()?['userName'] as String?;
+          .snapshots();
     }
-    return null;
+    return Stream.empty();
   }
+
+
+
+
+  //log_out function
+  Future<void> signOut() async {
+    await FirebaseAuth.instance.signOut();
+  }
+
+  // Function to sign out the user
+  Future<void> _signOut() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      // Navigate to login screen or handle sign out as needed
+      // You might want to replace this with your actual navigation logic
+      Navigator.pushReplacementNamed(context, '/login');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error signing out: $e')),
+      );
+    }
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -46,121 +69,123 @@ class _MainProfileState extends State<MainProfile> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FutureBuilder<String?>(
-                future: _getUserName(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    );
-                  }
-                  final userName = snapshot.data ?? "User";
-                  final nameParts = userName.split(" ");
-                  final firstName = nameParts.isNotEmpty ? nameParts[0] : "User";
-                  final lastName = nameParts.length > 1 ? nameParts[1] : "";
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: _getUserDataStream(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
 
-                  return ProfileCard(
+          if (snapshot.hasError) {
+            return Center(
+              child: Text('Error: ${snapshot.error}'),
+            );
+          }
+
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            return const Center(
+              child: Text('User data not found'),
+            );
+          }
+
+          // Extract all user data
+          final userData = snapshot.data!.data() as Map<String, dynamic>;
+          final firstName = userData['firstName'] as String? ?? 'User';
+          final lastName = userData['lastName'] as String? ?? '';
+          final email = userData['email'] as String?;
+          final phone = userData['phone'] as String?;
+          final gender = userData['gender'] as String?;
+          final dob = userData['dob'] as Timestamp?;
+          final balance = userData['balance'] as double?;
+          final selectedAvatar = userData['selectedAvatar'] as String?;
+          final selectedCenter = userData['selectedCenter'] as String?;
+          final selectedLocation = userData['selectedLocation'] as String?;
+
+          return SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ProfileCard(
                     firstName: firstName,
                     lastName: lastName,
-                    profilePicUrl: "",
-                  );
-                },
-              ),
-              // balance section
-              const SizedBox(height: 20),
-              CustomContainer(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Wallet Balance",
-                      style: TextStyle(
-                        color: AppColors.textDark,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    assetUrl: selectedAvatar ?? "",
+                  ),
+                  // balance section
+                  const SizedBox(height: 20),
+                  CustomContainer(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const Text(
+                          "Wallet Balance",
+                          style: TextStyle(
+                            color: AppColors.textDark,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              "₦ $balance",
-                              style: const TextStyle(
-                                color: AppColors.secondaryGreen,
-                                fontSize: 24.24,
-                              ),
+                            Row(
+                              children: [
+                                Text(
+                                  "₦ $balance",
+                                  style: const TextStyle(
+                                    color: AppColors.secondaryGreen,
+                                    fontSize: 24.24,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.visibility, color: AppColors.iconsDark),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.visibility, color: AppColors.iconsDark),
+                            CustomElevatedBtn(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const WithdrawalScreen()),
+                                );
+                              },
+                              text: "Withdraw",
+                            ),
                           ],
                         ),
-                        CustomElevatedBtn(
-                          onPressed: () {
+                        const SizedBox(height: 8),
+                        GestureDetector(
+                          onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const WithdrawalScreen()),
+                              MaterialPageRoute(builder: (context) => WithdrawalHistory()),
                             );
                           },
-                          text: "Withdraw",
+                          child: const Row(
+                            children: [
+                              Text(
+                                "History",
+                                style: TextStyle(
+                                  color: AppColors.primaryRed,
+                                ),
+                              ),
+                              Icon(Icons.chevron_right, color: AppColors.primaryRed, size: 16),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => WithdrawalHistory()),
-                        );
-                      },
-                      child: const Row(
-                        children: [
-                          Text(
-                            "History",
-                            style: TextStyle(
-                              color: AppColors.primaryRed,
-                            ),
-                          ),
-                          Icon(Icons.chevron_right, color: AppColors.primaryRed, size: 16),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Action Settings
-              CustomContainer(
-                child: Column(
-                  children: [
-                    FutureBuilder<String?>(
-                      future: _getUserName(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          );
-                        }
-                        final userName = snapshot.data ?? "User";
-                        final nameParts = userName.split(" ");
-                        final firstName = nameParts.isNotEmpty ? nameParts[0] : "User";
-                        final lastName = nameParts.length > 1 ? nameParts[1] : "";
-
-                        return CustomListTile(
+                  ),
+                  const SizedBox(height: 20),
+                  // Action Settings
+                  CustomContainer(
+                    child: Column(
+                      children: [
+                        CustomListTile(
                           onTap: () {
                             Navigator.push(
                               context,
@@ -168,6 +193,13 @@ class _MainProfileState extends State<MainProfile> {
                                 builder: (context) => ProfileAccount(
                                   firstName: firstName,
                                   lastName: lastName,
+                                  email: email,
+                                  phone: phone,
+                                  gender: gender,
+                                  dob: dob?.toDate(),
+                                  avatarUrl: selectedAvatar,
+
+                                  // Convert Firestore Timestamp to DateTime
                                 ),
                               ),
                             );
@@ -176,76 +208,78 @@ class _MainProfileState extends State<MainProfile> {
                           title: 'My Account',
                           subtitle: 'Make changes to your account',
                           iconTrailing: Icons.chevron_right,
-                        );
-                      },
+                        ),
+                        const CustomListTile(
+                          iconLeading: Icons.person_outlined,
+                          title: "Manage Banks Account",
+                          subtitle: "Manage your saved account",
+                          iconTrailing: Icons.chevron_right,
+                        ),
+                        const CustomListTile(
+                          subtitle: "Manage Your device security",
+                          iconLeading: Icons.lock,
+                          title: "Face ID & Touch ID",
+                          iconTrailing: Icons.toggle_off,
+                          trailingIconSize: 50,
+                          tailingIconColor: AppColors.iconsDefault,
+                        ),
+                        CustomListTile(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => ChangePassword()),
+                            );
+                          },
+                          iconLeading: Icons.safety_check_sharp,
+                          title: "Change Password",
+                          subtitle: "Further secure your account for safety",
+                          iconTrailing: Icons.chevron_right,
+                        ),
+                        CustomListTile(
+                          onTap: () async {
+                            await _signOut();
+                          },
+                          iconLeading: Icons.logout,
+                          title: "Log Out",
+                          subtitle: "Further secure your account for safety",
+                          iconTrailing: Icons.chevron_right,
+                        ),
+                      ],
                     ),
-                    const CustomListTile(
-                      iconLeading: Icons.person_outlined,
-                      title: "Manage Banks Account",
-                      subtitle: "Manage your saved account",
-                      iconTrailing: Icons.chevron_right,
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "More",
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const CustomListTile(
-                      subtitle: "Manage Your device security",
-                      iconLeading: Icons.lock,
-                      title: "Face ID & Touch ID",
-                      iconTrailing: Icons.toggle_off,
-                      trailingIconSize: 50,
-                      tailingIconColor: AppColors.iconsDefault,
+                  ),
+                  const SizedBox(height: 12),
+                  const CustomContainer(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        CustomListTile(
+                          iconLeading: Icons.notifications,
+                          title: "Help and Support",
+                          iconTrailing: Icons.chevron_right,
+                        ),
+                        CustomListTile(
+                          iconLeading: Icons.favorite_border_outlined,
+                          title: "About App",
+                          iconTrailing: Icons.chevron_right,
+                        ),
+                      ],
                     ),
-                    CustomListTile(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const ChangePassword()),
-                        );
-                      },
-                      iconLeading: Icons.safety_check_sharp,
-                      title: "Change Password",
-                      subtitle: "Further secure your account for safety",
-                      iconTrailing: Icons.chevron_right,
-                    ),
-                    const CustomListTile(
-                      iconLeading: Icons.logout,
-                      title: "Log Out",
-                      subtitle: "Further secure your account for safety",
-                      iconTrailing: Icons.chevron_right,
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 50),
+                ],
               ),
-              const SizedBox(height: 20),
-              const Text(
-                "More",
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 12),
-              const CustomContainer(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    CustomListTile(
-                      iconLeading: Icons.notifications,
-                      title: "Help and Support",
-                      iconTrailing: Icons.chevron_right,
-                    ),
-                    CustomListTile(
-                      iconLeading: Icons.favorite_border_outlined,
-                      title: "About App",
-                      iconTrailing: Icons.chevron_right,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 50),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
-      // bottomNavigationBar: const MainBottomNavBar(), // Use the bottom navigation bar from main.dart
     );
   }
 }
