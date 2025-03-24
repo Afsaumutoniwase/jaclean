@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../utils/bottom_nav.dart';
-import 'cart_provider.dart';
+import 'package:jaclean/blocs/market/cart_bloc.dart';
 
 class OrderConfirmationPage extends StatelessWidget {
   final String orderNumber;
@@ -71,7 +71,7 @@ class OrderConfirmationPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
                 ),
                 onPressed: () {
-                  Provider.of<CartProvider>(context, listen: false).clearCart();
+                  context.read<CartBloc>().add(ClearCart());
                   Navigator.pushReplacementNamed(context, '/home');
                 },
                 child: const Text("Done", style: TextStyle(fontSize: 16, color: Colors.white)),

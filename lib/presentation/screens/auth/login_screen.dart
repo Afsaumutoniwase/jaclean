@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../auth/onboarding_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:jaclean/blocs/auth/auth_bloc.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -10,13 +9,10 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
-  bool _isLoading = false;
   final primaryColor = const Color(0xFF00BF63);
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void dispose() {
@@ -25,37 +21,18 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _login() async {
+  void _login() {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
-      try {
-        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
-
-        // Check if the user has a Firestore document
-        DocumentSnapshot userDoc = await _firestore.collection('users').doc(userCredential.user!.uid).get();
-        if (userDoc.exists) {
-          Navigator.of(context).pushReplacementNamed('/home');
-        } else {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => OnboardingScreen()),
-          );
-        }
-      } on FirebaseAuthException catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? 'Login failed')),
-        );
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      context.read<AuthBloc>().add(LoginRequested(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      ));
     }
   }
+
+  // void _googleSignIn() {
+  //   context.read<AuthBloc>().add(GoogleSignInRequested());
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -180,30 +157,67 @@ class _LoginScreenState extends State<LoginScreen> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your password';
                       }
+                      if (value.length < 6) {
+                        return 'Password must be at least 6 characters long';
+                      }
                       return null;
                     },
                   ),
                   const SizedBox(height: 32),
-                  _isLoading
-                      ? Center(child: CircularProgressIndicator())
-                      : ElevatedButton(
-                          onPressed: _login,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                  BlocConsumer<AuthBloc, AuthState>(
+                    listener: (context, state) {
+                      if (state is AuthAuthenticated) {
+                        Navigator.of(context).pushReplacementNamed('/home');
+                      } else if (state is AuthEmailNotVerified) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Please verify your email before logging in.')),
+                        );
+                      } else if (state is AuthError) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(state.message)),
+                        );
+                      }
+                    },
+                    builder: (context, state) {
+                      if (state is AuthLoading) {
+                        return Center(child: CircularProgressIndicator());
+                      }
+                      return Column(
+                        children: [
+                          ElevatedButton(
+                            onPressed: _login,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 120),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                            ),
+                            child: const Text(
+                              'Login',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
-                          child: const Text(
-                            'Login',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pushNamed('/forgot-password');
+                            },
+                            child: Text(
+                              'Forgot Password?',
+                              style: TextStyle(
+                                color: primaryColor,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                        ),
+                        ],
+                      );
+                    },
+                  ),
                   const SizedBox(height: 20),
                   Row(
                     children: [
@@ -234,7 +248,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 20),
                   OutlinedButton.icon(
                     onPressed: () {
-                      // Handle Google sign in
+                      
                     },
                     icon: Image.asset(
                       'assets/images/google_logo.png',

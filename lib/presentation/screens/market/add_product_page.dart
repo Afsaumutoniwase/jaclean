@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class AddProductPage extends StatefulWidget {
-  const AddProductPage({super.key});
+  final Map<String, dynamic>? product;
+
+  const AddProductPage({super.key, this.product});
 
   @override
   _AddProductPageState createState() => _AddProductPageState();
@@ -19,6 +23,30 @@ class _AddProductPageState extends State<AddProductPage> {
   String _itemState = 'New';
   File? _image;
   String _uploadSection = 'Sell'; // Default to "Sell"
+  String? _productId;
+
+  final List<String> _defaultImages = [
+    'assets/images/table.jpeg',
+    'assets/images/fridge.jpeg',
+    'assets/images/clothes4.jpeg',
+    'assets/images/ewaste1.jpeg',
+    'assets/images/gas.jpeg',
+    'assets/images/pot.jpeg',
+    'assets/images/vase.jpeg',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.product != null) {
+      _productId = widget.product!['id'];
+      _productNameController.text = widget.product!['name'];
+      _productDescriptionController.text = widget.product!['description'];
+      _priceController.text = widget.product!['price'];
+      _itemState = widget.product!['itemState'] ?? 'New';
+      _uploadSection = widget.product!['section'] ?? 'Sell';
+    }
+  }
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -42,16 +70,42 @@ class _AddProductPageState extends State<AddProductPage> {
     return null;
   }
 
-  void _postProduct() {
+  Future<void> _postProduct() async {
     if (_formKey.currentState!.validate()) {
+      // Pick a random default image
+      final random = Random();
+      String imageUrl = _defaultImages[random.nextInt(_defaultImages.length)];
+
+      if (_image != null) {
+        // Upload image to Firebase Storage
+        final storageRef = FirebaseStorage.instance.ref().child('product_images/${DateTime.now().millisecondsSinceEpoch}.jpg');
+        final uploadTask = storageRef.putFile(_image!);
+        final snapshot = await uploadTask.whenComplete(() {});
+        imageUrl = await snapshot.ref.getDownloadURL();
+      }
+
       final product = {
         'name': _productNameController.text,
         'description': _productDescriptionController.text,
         'price': _priceController.text,
-        'image': _image?.path ?? '',
+        'image': imageUrl,
         'section': _uploadSection,
+        'userId': FirebaseAuth.instance.currentUser?.uid, // Add userId to the product
       };
-      Navigator.pop(context, product);
+
+      if (mounted) {
+        if (_productId != null) {
+          // Update existing product
+          await FirebaseFirestore.instance.collection('products').doc(_productId).update(product);
+        } else {
+          // Add new product
+          await FirebaseFirestore.instance.collection('products').add(product);
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Product uploaded successfully')),
+        );
+        Navigator.pop(context, product);
+      }
     }
   }
 
@@ -109,8 +163,8 @@ class _AddProductPageState extends State<AddProductPage> {
           ),
         ],
       ),
-      body: Container(
-        color: Colors.white, // Ensure the background is white
+      body: SafeArea(
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -262,7 +316,7 @@ class _AddProductPageState extends State<AddProductPage> {
           ),
         ),
       ),
-      // bottomNavigationBar: const MainBottomNavBar(), // Use the bottom navigation bar from main.dart
+      )// bottomNavigationBar
     );
   }
 }

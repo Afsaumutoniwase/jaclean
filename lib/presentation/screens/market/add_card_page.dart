@@ -140,7 +140,7 @@ class _AddCardPageState extends State<AddCardPage> {
                             });
                           }
                         },
-                        child: Text("Submit Order: ₦${total.toStringAsFixed(2)}", style: const TextStyle(fontSize: 16, color: Colors.white)),
+                        child: Text("Make Payment"),
                       ),
               ),
             ],

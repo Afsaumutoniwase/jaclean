@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../blocs/reviews/review_action_bloc.dart'; // Adjust path if needed
 
 class ReviewItem extends StatelessWidget {
   final String reviewerName;
@@ -6,15 +8,51 @@ class ReviewItem extends StatelessWidget {
   final String reviewTime;
   final double rating;
   final bool showImages;
+  final String imageUrl;
+
+  final bool canEdit;
+  final String? reviewId;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   const ReviewItem({
-    Key? key,
+    super.key,
     required this.reviewerName,
     required this.reviewText,
     required this.reviewTime,
     required this.rating,
     this.showImages = false,
-  }) : super(key: key);
+    this.imageUrl = 'assets/images/table.jpeg',
+    this.canEdit = false,
+    this.onEdit,
+    this.reviewId,
+    this.onDelete,
+  });
+
+  void _confirmDelete(BuildContext context) {
+    if (reviewId == null) return;
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Delete Review"),
+        content: const Text("Are you sure you want to delete this review?"),
+        actions: [
+          TextButton(
+            child: const Text("Cancel"),
+            onPressed: () => Navigator.pop(context),
+          ),
+          TextButton(
+            child: const Text("Delete"),
+            onPressed: () {
+              context.read<ReviewActionBloc>().add(DeleteReviewEvent(reviewId!));
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,47 +76,44 @@ class ReviewItem extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    CircleAvatar(
-                      backgroundImage: AssetImage('assets/images/vase1.jpeg'),
+                    const CircleAvatar(
+                      backgroundImage: AssetImage('assets/images/vase.jpeg'),
                       radius: 20,
                     ),
                     const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          reviewerName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      reviewerName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ],
                 ),
                 Text(
                   reviewTime,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
                 ),
               ],
             ),
+
             const SizedBox(height: 8),
+
+            // Review text
             Text(
               reviewText,
-              style: const TextStyle(
-                fontSize: 14,
-              ),
+              style: const TextStyle(fontSize: 14),
             ),
+
             const SizedBox(height: 8),
+
+            // Rating
             Row(
               children: [
                 ...List.generate(5, (index) {
@@ -91,23 +126,32 @@ class ReviewItem extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   rating.toString(),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.black,
-                  ),
+                  style: const TextStyle(fontSize: 14),
                 ),
               ],
             ),
+
             if (showImages) ...[
               const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(imageUrl, fit: BoxFit.cover),
+              ),
+            ],
+
+            if (canEdit) ...[
+              const SizedBox(height: 12),
               Row(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Expanded(
-                    child: Image.asset('assets/images/table.jpeg'),
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: Colors.green, size: 20),
+                    onPressed: onEdit,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Image.asset('assets/images/fridge.jpeg'),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                    onPressed: onDelete,
+                    // onPressed: () => _confirmDelete(context),
                   ),
                 ],
               ),

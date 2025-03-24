@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../auth/onboarding_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:jaclean/blocs/auth/auth_bloc.dart';
+import 'onboarding_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -10,13 +11,11 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _isLoading = false;
   final primaryColor = const Color(0xFF00BF63);
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   void dispose() {
@@ -26,28 +25,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  Future<void> _register() async {
+  void _register() {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
-      try {
-        UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => OnboardingScreen()),
-        );
-      } on FirebaseAuthException catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? 'Registration failed')),
-        );
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      context.read<AuthBloc>().add(RegisterRequested(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      ));
     }
   }
 
@@ -130,6 +113,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       return null;
                     },
                   ),
+                  const SizedBox(height: 8),
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, state) {
+                      if (state is AuthError && state.message.contains('email')) {
+                        return Text(
+                          state.message,
+                          style: TextStyle(color: Colors.red, fontSize: 12),
+                        );
+                      }
+                      return SizedBox.shrink();
+                    },
+                  ),
                   const SizedBox(height: 24),
                   Text(
                     'Password',
@@ -175,6 +170,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         return 'Please enter your password';
                       }
                       return null;
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, state) {
+                      if (state is AuthError && state.message.contains('password')) {
+                        return Text(
+                          state.message,
+                          style: TextStyle(color: Colors.red, fontSize: 12),
+                        );
+                      }
+                      return SizedBox.shrink();
                     },
                   ),
                   const SizedBox(height: 24),
@@ -227,27 +234,58 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       return null;
                     },
                   ),
+                  const SizedBox(height: 8),
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, state) {
+                      if (state is AuthError && state.message.contains('confirm password')) {
+                        return Text(
+                          state.message,
+                          style: TextStyle(color: Colors.red, fontSize: 12),
+                        );
+                      }
+                      return SizedBox.shrink();
+                    },
+                  ),
                   const SizedBox(height: 32),
-                  _isLoading
-                      ? Center(child: CircularProgressIndicator())
-                      : ElevatedButton(
-                          onPressed: _register,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          child: const Text(
-                            'Register',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
+                  BlocConsumer<AuthBloc, AuthState>(
+                    listener: (context, state) {
+                      if (state is AuthEmailNotVerified) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Please verify your email before logging in.')),
+                        );
+                        Navigator.of(context).pushReplacementNamed('/onboarding');
+                      } else if (state is AuthAuthenticated) {
+                        Navigator.of(context).pushReplacementNamed('/onboarding');
+                      } else if (state is AuthError) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(state.message)),
+                        );
+                      }
+                    },
+                    builder: (context, state) {
+                      if (state is AuthLoading) {
+                        return Center(child: CircularProgressIndicator());
+                      }
+                      return ElevatedButton(
+                        onPressed: _register,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
                           ),
                         ),
+                        child: const Text(
+                          'Register',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,

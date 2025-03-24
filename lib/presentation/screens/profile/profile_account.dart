@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:jaclean/blocs/profile/profile_account_bloc.dart';
 
 class ProfileAccount extends StatefulWidget {
   final String firstName;
   final String lastName;
+  final String userName;
   final String? gender;
   final String? phone;
   final String? email;
@@ -16,6 +16,7 @@ class ProfileAccount extends StatefulWidget {
     super.key,
     required this.firstName,
     required this.lastName,
+    required this.userName,
     this.phone = '09122334455',
     this.dob,
     this.gender,
@@ -30,23 +31,20 @@ class ProfileAccount extends StatefulWidget {
 class _ProfileAccountState extends State<ProfileAccount> {
   late TextEditingController _firstNameController;
   late TextEditingController _lastNameController;
+  late TextEditingController _userNameController;
   late TextEditingController _phoneController;
   late TextEditingController _emailController;
   late TextEditingController _dateController;
 
   DateTime? _selectedDate;
   String? _selectedGender;
-  bool _isLoading = false;
-
-  // Firebase instances
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void initState() {
     super.initState();
     _firstNameController = TextEditingController(text: widget.firstName);
     _lastNameController = TextEditingController(text: widget.lastName);
+    _userNameController = TextEditingController(text: widget.userName);
     _phoneController = TextEditingController(text: widget.phone ?? '');
     _emailController = TextEditingController(text: widget.email ?? '');
     _selectedGender = widget.gender;
@@ -62,6 +60,7 @@ class _ProfileAccountState extends State<ProfileAccount> {
   void dispose() {
     _firstNameController.dispose();
     _lastNameController.dispose();
+    _userNameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
     _dateController.dispose();
@@ -87,7 +86,6 @@ class _ProfileAccountState extends State<ProfileAccount> {
     }
   }
 
-  // Validate form before submission
   bool _validateForm() {
     if (_firstNameController.text.isEmpty) {
       _showErrorMessage('First name is required');
@@ -96,6 +94,11 @@ class _ProfileAccountState extends State<ProfileAccount> {
 
     if (_lastNameController.text.isEmpty) {
       _showErrorMessage('Last name is required');
+      return false;
+    }
+
+    if (_userNameController.text.isEmpty) {
+      _showErrorMessage('Username is required');
       return false;
     }
 
@@ -121,84 +124,6 @@ class _ProfileAccountState extends State<ProfileAccount> {
     );
   }
 
-  Future<void> _updateProfile() async {
-    // Validate form first
-    if (!_validateForm()) {
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      // Get current user
-      final User? user = _auth.currentUser;
-
-      if (user == null) {
-        _showErrorMessage('User not authenticated');
-        return;
-      }
-
-      // Prepare data to update
-      final Map<String, dynamic> userData = {
-        'firstName': _firstNameController.text,
-        'lastName': _lastNameController.text,
-        'phone': _phoneController.text,
-      };
-
-      // Only add these fields if they have values
-      if (_emailController.text.isNotEmpty) {
-        userData['email'] = _emailController.text;
-      }
-
-      if (_selectedGender != null) {
-        userData['gender'] = _selectedGender;
-      }
-
-      if (_selectedDate != null) {
-        userData['dob'] = Timestamp.fromDate(_selectedDate!);
-      }
-
-      // Update Firestore document in the users collection
-      await _firestore.collection('users').doc(user.uid).update(userData);
-
-      // If email was changed, update Firebase Auth email
-      if (_emailController.text.isNotEmpty && _emailController.text != user.email) {
-        await user.verifyBeforeUpdateEmail(_emailController.text);
-      }
-
-      // Update local storage
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('firstName', _firstNameController.text);
-      await prefs.setString('lastName', _lastNameController.text);
-
-      if (_phoneController.text.isNotEmpty) {
-        await prefs.setString('phone', _phoneController.text);
-      }
-
-      if (_emailController.text.isNotEmpty) {
-        await prefs.setString('email', _emailController.text);
-      }
-
-      if (_selectedGender != null) {
-        await prefs.setString('gender', _selectedGender!);
-      }
-
-      if (_selectedDate != null) {
-        await prefs.setString('dob', _formatDate(_selectedDate!));
-      }
-
-      _showSuccessMessage('Profile updated successfully!');
-    } catch (e) {
-      _showErrorMessage('Error updating profile: ${e.toString()}');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
   void _showSuccessMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -208,191 +133,213 @@ class _ProfileAccountState extends State<ProfileAccount> {
     );
   }
 
+  void _updateProfile(BuildContext context) {
+    if (!_validateForm()) {
+      return;
+    }
+
+    context.read<ProfileAccountBloc>().add(
+      UpdateProfileEvent(
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        userName: _userNameController.text.trim(),
+        phone: _phoneController.text.trim(),
+        email: _emailController.text.trim(),
+        gender: _selectedGender,
+        dob: _selectedDate,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("My Account"),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
+    return BlocProvider(
+      create: (context) => ProfileAccountBloc()..add(FetchUserProfile()),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("My Account"),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0.5,
+        ),
+        body: BlocConsumer<ProfileAccountBloc, ProfileAccountState>(
+          listener: (context, state) {
+            if (state is ProfileAccountSuccess) {
+              _showSuccessMessage('Profile updated successfully!');
+            } else if (state is ProfileAccountFailure) {
+              _showErrorMessage(state.error);
+            }
+          },
+          builder: (context, state) {
+            if (state is ProfileAccountLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Stack(
-                      children: [
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.grey[300],
-                          backgroundImage: widget.avatarUrl != null ? AssetImage(widget.avatarUrl!) : null,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 15),
-                    Text(
-                      "${widget.firstName} ${widget.lastName}",
-                      style: const TextStyle(
-                        color: Color(0xff181D27),
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
+                    Center(
+                      child: Column(
+                        children: [
+                          Stack(
+                            children: [
+                              CircleAvatar(
+                                radius: 50,
+                                backgroundColor: Colors.grey[300],
+                                backgroundImage: widget.avatarUrl != null ? AssetImage(widget.avatarUrl!) : null,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 15),
+                          Text(
+                            "${widget.firstName} ${widget.lastName}",
+                            style: const TextStyle(
+                              color: Color(0xff181D27),
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          if (widget.email != null && widget.email!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                widget.email!,
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                    if (widget.email != null && widget.email!.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          widget.email!,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
+                    const SizedBox(height: 32),
+                    const Text(
+                      "Personal Information",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _firstNameController,
+                      decoration: const InputDecoration(
+                        labelText: "First Name",
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.person_outline),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: _lastNameController,
+                      decoration: const InputDecoration(
+                        labelText: "Last Name",
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.person_outline),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: _userNameController,
+                      decoration: const InputDecoration(
+                        labelText: "Username",
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.person_outline),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    DropdownButtonFormField<String>(
+                      value: _selectedGender,
+                      decoration: const InputDecoration(
+                        labelText: "Gender",
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.people_outline),
+                      ),
+                      items: ["Male", "Female", "Other", "Prefer not to say"]
+                          .map((String gender) {
+                        return DropdownMenuItem<String>(
+                          value: gender,
+                          child: Text(gender),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedGender = newValue;
+                        });
+                      },
+                      hint: const Text("Select Gender"),
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: _dateController,
+                      readOnly: true,
+                      decoration: InputDecoration(
+                        labelText: 'Date of Birth',
+                        border: const OutlineInputBorder(),
+                        hintText: 'Select your date of birth',
+                        prefixIcon: const Icon(Icons.calendar_today_outlined),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.calendar_month),
+                          onPressed: () => _selectDate(context),
+                        ),
+                      ),
+                      onTap: () => _selectDate(context),
+                    ),
+                    const SizedBox(height: 32),
+                    const Text(
+                      "Contact Information",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: 'Phone Number',
+                        prefixIcon: Icon(Icons.phone_outlined),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: "Email",
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.email_outlined),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: () => _updateProfile(context),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 50),
+                          backgroundColor: const Color(0xff1FC776),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
+                        child: const Text(
+                          "Update Profile",
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
                       ),
+                    ),
                   ],
                 ),
               ),
-
-              const SizedBox(height: 32),
-              const Text(
-                "Personal Information",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // First Name Field
-              TextFormField(
-                controller: _firstNameController,
-                decoration: const InputDecoration(
-                  labelText: "First Name",
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Last Name Field
-              TextFormField(
-                controller: _lastNameController,
-                decoration: const InputDecoration(
-                  labelText: "Last Name",
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Gender Dropdown
-              DropdownButtonFormField<String>(
-                value: _selectedGender,
-                decoration: const InputDecoration(
-                  labelText: "Gender",
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.people_outline),
-                ),
-                items: ["Male", "Female", "Other", "Prefer not to say"]
-                    .map((String gender) {
-                  return DropdownMenuItem<String>(
-                    value: gender,
-                    child: Text(gender),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedGender = newValue;
-                  });
-                },
-                hint: const Text("Select Gender"),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Date of Birth Picker
-              TextFormField(
-                controller: _dateController,
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText: 'Date of Birth',
-                  border: const OutlineInputBorder(),
-                  hintText: 'Select your date of birth',
-                  prefixIcon: const Icon(Icons.calendar_today_outlined),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.calendar_month),
-                    onPressed: () => _selectDate(context),
-                  ),
-                ),
-                onTap: () => _selectDate(context),
-              ),
-
-              const SizedBox(height: 32),
-              const Text(
-                "Contact Information",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Phone Number Input
-              TextFormField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Phone Number',
-                  prefixIcon: Icon(Icons.phone_outlined),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Email Field
-              TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: "Email",
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email_outlined),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // Update Profile Button
-              Center(
-                child: ElevatedButton(
-                  onPressed: _updateProfile,
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 50),
-                    backgroundColor: const Color(0xff1FC776),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    "Update Profile",
-                    style: TextStyle(fontSize: 16, color: Colors.white),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'custom_button.dart';
 import 'custom_elevated_btn.dart';
 
-
 class CustomSuccessDialog extends StatelessWidget {
   final VoidCallback onProceed;
   final String messageTitle;
   final String subtitle;
   final String proceedText;
+
   const CustomSuccessDialog({
     super.key,
     required this.onProceed,
@@ -27,11 +27,9 @@ class CustomSuccessDialog extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Row(
-
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 IconButton(
-
                   icon: const Icon(Icons.close),
                   onPressed: () {
                     Navigator.of(context).pop();
@@ -39,7 +37,7 @@ class CustomSuccessDialog extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 20,),
+            const SizedBox(height: 20),
             Text(
               messageTitle,
               style: const TextStyle(
@@ -62,8 +60,9 @@ class CustomSuccessDialog extends StatelessWidget {
               width: double.infinity,
               height: 50,
               child: CustomElevatedBtn(
-                  onPressed:onProceed,
-                  text: proceedText)
+                onPressed: onProceed,
+                text: proceedText,
+              ),
             ),
           ],
         ),

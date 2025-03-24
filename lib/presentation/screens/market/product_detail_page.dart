@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 import 'shopping_cart.dart';
-import 'cart_provider.dart';
+import 'package:jaclean/blocs/market/cart_bloc.dart';
 
 class ProductDetailPage extends StatelessWidget {
   final String image;
@@ -135,15 +135,15 @@ class ProductDetailPage extends StatelessWidget {
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
-          _buildProductCard("assets/images/laptop1.png"),
-          _buildProductCard("assets/images/clothes2.png"),
-          _buildProductCard("assets/images/pot.jpeg"),
+          _buildProductCard("assets/images/laptop1.png", "Dell Optiplex", "₦79,000"),
+          _buildProductCard("assets/images/clothes2.png", "Clothes Item", "₦5,000"),
+          _buildProductCard("assets/images/pot.jpeg", "Big Pot", "₦10,000"),
         ],
       ),
     );
   }
 
-  Widget _buildProductCard(String image) {
+  Widget _buildProductCard(String image, String name, String price) {
     return Container(
       width: 160,
       margin: const EdgeInsets.only(right: 10),
@@ -177,9 +177,9 @@ class ProductDetailPage extends StatelessWidget {
                   style: TextStyle(color: Colors.white, fontSize: 12),
                 ),
               ),
-              Consumer<CartProvider>(
-                builder: (context, cart, child) {
-                  final isInCart = cart.isInCart("Dell Optiplex");
+              BlocBuilder<CartBloc, CartState>(
+                builder: (context, state) {
+                  final isInCart = state is CartUpdated && state.cartItems.any((item) => item['name'] == name);
                   return IconButton(
                     icon: Icon(
                       isInCart ? Icons.favorite : Icons.favorite_border,
@@ -187,9 +187,9 @@ class ProductDetailPage extends StatelessWidget {
                     ),
                     onPressed: () {
                       if (isInCart) {
-                        cart.removeItem("Dell Optiplex");
+                        context.read<CartBloc>().add(RemoveItem(name: name));
                       } else {
-                        cart.addItem(image, "Dell Optiplex", "₦79,000");
+                        context.read<CartBloc>().add(AddItem(image: image, name: name, price: price));
                       }
                     },
                   );
@@ -208,7 +208,7 @@ class ProductDetailPage extends StatelessWidget {
             style: TextStyle(fontSize: 12, color: Colors.grey[600]),
           ),
           const SizedBox(height: 4),
-          Text("Dell Optiplex", style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -221,7 +221,7 @@ class ProductDetailPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    "₦79,000",
+                    price,
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
                   ),
                 ),
@@ -251,9 +251,9 @@ class ProductDetailPage extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Consumer<CartProvider>(
-            builder: (context, cart, child) {
-              final isInCart = cart.isInCart(name);
+          BlocBuilder<CartBloc, CartState>(
+            builder: (context, state) {
+              final isInCart = state is CartUpdated && state.cartItems.any((item) => item['name'] == name);
               return IconButton(
                 icon: Icon(
                   isInCart ? Icons.favorite : Icons.favorite_border,
@@ -261,9 +261,9 @@ class ProductDetailPage extends StatelessWidget {
                 ),
                 onPressed: () {
                   if (isInCart) {
-                    cart.removeItem(name);
+                    context.read<CartBloc>().add(RemoveItem(name: name));
                   } else {
-                    cart.addItem(image, name, price);
+                    context.read<CartBloc>().add(AddItem(image: image, name: name, price: price));
                   }
                 },
               );
@@ -277,7 +277,7 @@ class ProductDetailPage extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               onPressed: () {
-                Provider.of<CartProvider>(context, listen: false).addItem(image, name, price);
+                context.read<CartBloc>().add(AddItem(image: image, name: name, price: price));
               },
               child: const Text("Add to Cart", style: TextStyle(fontSize: 16, color: Colors.white)),
             ),

@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart'; // Import LatLng
 import 'services/recycling_centers_page.dart'; // Import the RecyclingCentersPage
 import 'market/shopping_cart.dart'; // Import the ShoppingCartPage
 import 'services/service_detail_page.dart'; // Import the ServiceDetailPage
+import 'package:jaclean/main.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -15,10 +16,11 @@ class HomePage extends StatelessWidget {
   Future<String?> _getUserName() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
       return doc.data()?['userName'] as String?;
     }
     return null;
@@ -56,7 +58,8 @@ class HomePage extends StatelessWidget {
                       FutureBuilder<String?>(
                         future: _getUserName(),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
                             return const SizedBox(
                               height: 24,
                               width: 24,
@@ -78,7 +81,10 @@ class HomePage extends StatelessWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => _navigateToShoppingCartPage(context), // Navigate to the shopping cart page
+                  onTap:
+                      () => _navigateToShoppingCartPage(
+                        context,
+                      ), // Navigate to the shopping cart page
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -134,38 +140,75 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 28),
 
             // Quick Actions
-            const Text("Quick Actions", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              "Quick Actions",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildQuickAction(context, "Buy or sell\nE-waste", Icons.shopping_cart_outlined, MarketPage()),
-                _buildQuickAction(context, "Donate\nE-waste", Icons.volunteer_activism_outlined, const AddProductPage()),
-                _buildQuickAction(context, "Schedule\nPickup", Icons.schedule, ServiceDetailPage(serviceType: 'recycling')),
-                _buildQuickAction(context, "Find Recycling\nCenters", Icons.location_searching_outlined, RecyclingCentersPage()),
+                _buildQuickAction(
+                  context,
+                  "Buy or sell\nE-waste",
+                  Icons.shopping_cart_outlined,
+                  const MainScreen(initialIndex: 2),
+                ),
+                _buildQuickAction(
+                  context,
+                  "Donate\nE-waste",
+                  Icons.volunteer_activism_outlined,
+                  const AddProductPage(),
+                ),
+                _buildQuickAction(
+                  context,
+                  "Schedule\nPickup",
+                  Icons.schedule,
+                  ServiceDetailPage(serviceType: 'recycling'),
+                ),
+                _buildQuickAction(
+                  context,
+                  "Find Recycling\nCenters",
+                  Icons.location_searching_outlined,
+                  RecyclingCentersPage(),
+                ),
               ],
             ),
 
             const SizedBox(height: 28),
 
             // Recycling Center Section
-            const Text("Recycling center", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              "Recycling center",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 5),
-            Text("This is the closest location to you", style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+            Text(
+              "This is the closest location to you",
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+            ),
             const SizedBox(height: 10),
-            _buildRecyclingCenter(context, "Remera E4 E-waste Center", "Kg st 101, Kigali Rwanda", LatLng(-1.944072, 30.089233)),
+            _buildRecyclingCenter(
+              context,
+              "Abuja E-waste Center",
+              "123 st , Garki Abuja",
+              LatLng(-1.944072, 30.089233),
+            ),
 
             const SizedBox(height: 28),
 
             // Recent Activities
-            const Text("Recent Activities", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              "Recent Activities",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 10),
-            _buildRecentActivity("Your laptop product listed and active"),
+            _buildRecentActivity(
+              context,
+              "Your laptop product listed and active",
+            ),
 
             const SizedBox(height: 28),
-
-            // Featured Blogs
-            const Text("Featured blogs", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -189,7 +232,8 @@ class HomePage extends StatelessWidget {
             _buildContributionCard(
               title: "Waste recycled",
               value: "15 kg",
-              description: "You add up to 0.1% of people saving the planet. Thank you!",
+              description:
+                  "You add up to 0.1% of people saving the planet. Thank you!",
               icon: Icons.delete_outline,
               iconColor: Colors.green,
             ),
@@ -284,7 +328,12 @@ class HomePage extends StatelessWidget {
   }
 
   /// **Builds the Quick Action buttons**
-  Widget _buildQuickAction(BuildContext context, String label, IconData icon, Widget? destination) {
+  Widget _buildQuickAction(
+    BuildContext context,
+    String label,
+    IconData icon,
+    Widget? destination,
+  ) {
     return GestureDetector(
       onTap: () {
         if (destination != null) {
@@ -332,7 +381,12 @@ class HomePage extends StatelessWidget {
   }
 
   /// **Builds the Recycling Center section**
-  Widget _buildRecyclingCenter(BuildContext context, String name, String address, LatLng location) {
+  Widget _buildRecyclingCenter(
+    BuildContext context,
+    String name,
+    String address,
+    LatLng location,
+  ) {
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -345,11 +399,12 @@ class HomePage extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => MapPage(
-                  name: name,
-                  address: address,
-                  location: location,
-                ),
+                builder:
+                    (context) => MapPage(
+                      name: name,
+                      address: address,
+                      location: location,
+                    ),
               ),
             );
           },
@@ -360,16 +415,30 @@ class HomePage extends StatelessWidget {
   }
 
   /// **Builds the Recent Activity section**
-  Widget _buildRecentActivity(String activity) {
+  Widget _buildRecentActivity(BuildContext context, String activity) {
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: const Icon(Icons.notifications_none_outlined, color: Colors.green),
+        leading: const Icon(
+          Icons.notifications_none_outlined,
+          color: Colors.green,
+        ),
         title: Text(activity),
         trailing: TextButton(
-          onPressed: () {},
-          child: const Text("View product", style: TextStyle(color: Colors.green)),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const MainScreen(initialIndex: 2),
+              ), // 2 = Market tab index
+              (route) => false,
+            );
+          },
+          child: const Text(
+            "View product",
+            style: TextStyle(color: Colors.green),
+          ),
         ),
       ),
     );
@@ -378,7 +447,9 @@ class HomePage extends StatelessWidget {
   void _navigateToShoppingCartPage(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ShoppingCartPage()), // Navigate to the shopping cart page
+      MaterialPageRoute(
+        builder: (context) => ShoppingCartPage(),
+      ), // Navigate to the shopping cart page
     );
   }
 }

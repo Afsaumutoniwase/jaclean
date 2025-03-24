@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:jaclean/blocs/auth/onboarding_bloc.dart';
 
 class OnboardingScreen extends StatefulWidget {
   @override
@@ -16,81 +16,112 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String? _selectedLocation;
   String? _selectedCenter;
   bool _acceptedTerms = false;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
-    final user = _auth.currentUser;
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                physics: NeverScrollableScrollPhysics(),
-                onPageChanged: (int page) {
-                  setState(() {
-                    _currentPage = page;
-                  });
-                },
+        child: BlocProvider(
+          create: (context) => OnboardingBloc(),
+          child: BlocConsumer<OnboardingBloc, OnboardingState>(
+            listener: (context, state) {
+              if (state is OnboardingSuccess) {
+                Navigator.of(context).pushReplacementNamed('/login');
+              } else if (state is OnboardingError) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(state.message)),
+                );
+              }
+            },
+            builder: (context, state) {
+              return Column(
                 children: [
-                  _buildWelcomePage(user?.email),
-                  _buildAvatarPage(),
-                  _buildLocationPage(),
-                  _buildCenterPage(),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (_currentPage > 0)
-                    TextButton(
-                      onPressed: () {
-                        _pageController.previousPage(
-                          duration: Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
+                  Expanded(
+                    child: PageView(
+                      controller: _pageController,
+                      physics: NeverScrollableScrollPhysics(),
+                      onPageChanged: (int page) {
+                        setState(() {
+                          _currentPage = page;
+                        });
                       },
-                      child: Text('Back'),
+                      children: [
+                        _buildWelcomePage(),
+                        _buildAvatarPage(),
+                        _buildLocationPage(),
+                        _buildCenterPage(),
+                      ],
                     ),
-                  ElevatedButton(
-                    onPressed: _canProgress() ? _nextPage : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: Text(
-                      _currentPage == 3 ? 'Finish' : 'Next',
-                      style: TextStyle(color: Colors.white),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (_currentPage > 0)
+                          TextButton(
+                            onPressed: () {
+                              _pageController.previousPage(
+                                duration: Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            },
+                            child: Text('Back'),
+                          ),
+                        ElevatedButton(
+                          onPressed: _canProgress()
+                              ? () {
+                                  if (_currentPage < 3) {
+                                    _pageController.nextPage(
+                                      duration: Duration(milliseconds: 300),
+                                      curve: Curves.easeInOut,
+                                    );
+                                  } else {
+                                    context.read<OnboardingBloc>().add(
+                                          OnboardingSubmit(
+                                            userName: _userName!,
+                                            selectedAvatar: _selectedAvatar!,
+                                            selectedLocation: _selectedLocation!,
+                                            selectedCenter: _selectedCenter!,
+                                            acceptedTerms: _acceptedTerms,
+                                          ),
+                                        );
+                                  }
+                                }
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          child: Text(
+                            _currentPage == 3 ? 'Finish' : 'Next',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
-              ),
-            ),
-          ],
+              );
+            },
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildWelcomePage(String? email) {
+  Widget _buildWelcomePage() {
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Welcome to JaClean!',
+            'Welcome to 9JaClean!',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -98,13 +129,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
           SizedBox(height: 16),
-         
-          if (email != null)
-            Text(
-              'Thank you for joining our eco-friendly community $email, let/s grab some details to get started.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
+          Text(
+            'Thank you for joining our eco-friendly community. Let\'s grab some details to get started.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+          ),
           SizedBox(height: 32),
           TextField(
             onChanged: (value) => setState(() => _userName = value),
@@ -184,7 +213,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       'Lagos',
       'Abuja',
       'Port Harcourt',
-      'Kano',
+      'Ibadan',
     ];
 
     return Padding(
@@ -289,31 +318,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         return _selectedCenter != null && _acceptedTerms;
       default:
         return false;
-    }
-  }
-
-  void _nextPage() {
-    if (_currentPage < 3) {
-      _pageController.nextPage(
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    } else {
-      _submitOnboardingData();
-    }
-  }
-
-  Future<void> _submitOnboardingData() async {
-    final user = _auth.currentUser;
-    if (user != null) {
-      await _firestore.collection('users').doc(user.uid).set({
-        'userName': _userName,
-        'selectedAvatar': _selectedAvatar,
-        'selectedLocation': _selectedLocation,
-        'selectedCenter': _selectedCenter,
-        'acceptedTerms': _acceptedTerms,
-      });
-      Navigator.of(context).pushReplacementNamed('/home');
     }
   }
 }

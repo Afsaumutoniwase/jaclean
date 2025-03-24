@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'shopping_cart.dart';
 import 'product_detail_page.dart';
 import 'add_product_page.dart';
-import '../../utils/bottom_nav.dart'; // Import the correct file where MainBottomNavBar is defined
+import '../../utils/bottom_nav.dart';
+
+import 'package:jaclean/blocs/market/market_bloc.dart';
 
 class MarketPage extends StatefulWidget {
   const MarketPage({super.key});
@@ -16,13 +19,33 @@ class MarketPage extends StatefulWidget {
 class _MarketPageState extends State<MarketPage> {
   String selectedCategory = "E-Waste";
   List<Map<String, dynamic>> productsForSale = [
-    {'name': 'Dell Optiplex', 'price': '₦79,000', 'image': 'assets/images/laptop1.png'},
-    {'name': 'Google Pixel 9pro XL', 'price': '₦189,000', 'image': 'assets/images/pixel9.png'},
-    {'name': 'JBL Home', 'price': '₦69,000', 'image': 'assets/images/jbl_home.png'},
-    {'name': 'Clothing Item 1', 'price': '₦5,000', 'image': 'assets/images/clothes1.png'},
+    {
+      'name': 'Dell Optiplex',
+      'price': '₦79,000',
+      'image': 'assets/images/laptop1.png',
+    },
+    {
+      'name': 'Google Pixel 9pro XL',
+      'price': '₦189,000',
+      'image': 'assets/images/pixel9.png',
+    },
+    {
+      'name': 'JBL Home',
+      'price': '₦69,000',
+      'image': 'assets/images/jbl_home.png',
+    },
+    {
+      'name': 'Clothing Item 1',
+      'price': '₦5,000',
+      'image': 'assets/images/clothes1.png',
+    },
   ];
   List<Map<String, dynamic>> charityDonations = [
-    {'name': 'Dell Optiplex', 'price': 'FREE', 'image': 'assets/images/laptop1.png'},
+    {
+      'name': 'Dell Optiplex',
+      'price': 'FREE',
+      'image': 'assets/images/laptop1.png',
+    },
     {'name': 'Clothes', 'price': 'FREE', 'image': 'assets/images/clothes1.png'},
     {'name': 'Big Pot', 'price': 'FREE', 'image': 'assets/images/pot.jpeg'},
   ];
@@ -35,35 +58,43 @@ class _MarketPageState extends State<MarketPage> {
     _loadUserProducts();
   }
 
+  // Add this method to load user products
   Future<void> _loadUserProducts() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final userProductsSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('products')
-          .get();
+      final userProductsSnapshot =
+          await FirebaseFirestore.instance
+              .collection('products')
+              .where('userId', isEqualTo: user.uid)
+              .get();
 
-      final userProducts = userProductsSnapshot.docs.map((doc) => doc.data()).toList();
+      final userProducts =
+          userProductsSnapshot.docs.map((doc) => doc.data()).toList();
 
       setState(() {
-        myProductsForSale = userProducts
-            .where((product) => product['section'] == 'Sell')
-            .map((product) => {
-                  'name': product['name'],
-                  'price': product['price'],
-                  'image': product['image'],
-                })
-            .toList();
+        myProductsForSale =
+            userProducts
+                .where((product) => product['section'] == 'Sell')
+                .map(
+                  (product) => {
+                    'name': product['name'],
+                    'price': product['price'],
+                    'image': product['image'],
+                  },
+                )
+                .toList();
 
-        myCharityDonations = userProducts
-            .where((product) => product['section'] == 'Charity Donation')
-            .map((product) => {
-                  'name': product['name'],
-                  'price': product['price'],
-                  'image': product['image'],
-                })
-            .toList();
+        myCharityDonations =
+            userProducts
+                .where((product) => product['section'] == 'Charity Donation')
+                .map(
+                  (product) => {
+                    'name': product['name'],
+                    'price': product['price'],
+                    'image': product['image'],
+                  },
+                )
+                .toList();
       });
     }
   }
@@ -71,10 +102,11 @@ class _MarketPageState extends State<MarketPage> {
   Future<String?> _getUserName() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
       return doc.data()?['userName'] as String?;
     }
     return null;
@@ -99,7 +131,9 @@ class _MarketPageState extends State<MarketPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Padding(
-          padding: const EdgeInsets.only(top: 16.0), // Add space above the "Hello" part
+          padding: const EdgeInsets.only(
+            top: 16.0,
+          ), // Add space above the "Hello" part
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -136,7 +170,9 @@ class _MarketPageState extends State<MarketPage> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ShoppingCartPage()),
+                MaterialPageRoute(
+                  builder: (context) => const ShoppingCartPage(),
+                ),
               );
             },
             child: Container(
@@ -146,7 +182,10 @@ class _MarketPageState extends State<MarketPage> {
                 borderRadius: BorderRadius.circular(12),
               ),
               padding: const EdgeInsets.all(10),
-              child: const Icon(Icons.shopping_cart_outlined, color: Colors.black),
+              child: const Icon(
+                Icons.shopping_cart_outlined,
+                color: Colors.black,
+              ),
             ),
           ),
         ],
@@ -161,7 +200,11 @@ class _MarketPageState extends State<MarketPage> {
               const SizedBox(height: 16),
               const Text(
                 "Categories",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
               const SizedBox(height: 16),
               _buildScrollableCategorySection(),
@@ -169,23 +212,35 @@ class _MarketPageState extends State<MarketPage> {
               if (selectedCategory == "My Products") ...[
                 const Text(
                   "My Products for Sale",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 _buildScrollableMyProductGrid(context, myProductsForSale),
                 const SizedBox(height: 20),
                 const Text(
                   "My Charity Donations",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 _buildScrollableMyCharityGrid(),
               ] else ...[
-                _buildScrollableProductGrid(context),
+                _buildScrollableProductGrid(context, productsForSale),
                 const SizedBox(height: 20),
                 const Text(
                   "Charity Donations",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 _buildScrollableCharityGrid(),
@@ -267,94 +322,300 @@ class _MarketPageState extends State<MarketPage> {
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
-          _buildCategoryButton("My Products", isSelected: selectedCategory == "My Products"),
+          _buildCategoryButton(
+            "My Products",
+            isSelected: selectedCategory == "My Products",
+          ),
           _buildCategoryButton("All", isSelected: selectedCategory == "All"),
-          _buildCategoryButton("E-Waste", isSelected: selectedCategory == "E-Waste"),
-          _buildCategoryButton("Clothing", isSelected: selectedCategory == "Clothing"),
-          _buildCategoryButton("Appliances", isSelected: selectedCategory == "Appliances"),
-          _buildCategoryButton("Metal Waste", isSelected: selectedCategory == "Metal Waste"),
-          _buildCategoryButton("Construction", isSelected: selectedCategory == "Construction"),
+          _buildCategoryButton(
+            "E-Waste",
+            isSelected: selectedCategory == "E-Waste",
+          ),
+          _buildCategoryButton(
+            "Clothing",
+            isSelected: selectedCategory == "Clothing",
+          ),
+          _buildCategoryButton(
+            "Appliances",
+            isSelected: selectedCategory == "Appliances",
+          ),
+          _buildCategoryButton(
+            "Metal Waste",
+            isSelected: selectedCategory == "Metal Waste",
+          ),
+          _buildCategoryButton(
+            "Construction",
+            isSelected: selectedCategory == "Construction",
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildScrollableProductGrid(BuildContext context) {
-    List<Widget> items = productsForSale.map((product) {
-      return _buildMarketItem(context, product['name']!, product['price']!, product['image']!);
-    }).toList();
-
+  Widget _buildScrollableMyProductGrid(
+    BuildContext context,
+    List<Map<String, dynamic>> products,
+  ) {
     return SizedBox(
-      height: 280,
-      child: ListView(
+      height: 250,
+      child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        children: items,
-      ),
-    );
-  }
-
-  Widget _buildScrollableCharityGrid() {
-    List<Widget> items = charityDonations.map((product) {
-      return _buildMarketItem(null, product['name']!, product['price']!, product['image']!);
-    }).toList();
-
-    return SizedBox(
-      height: 270,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children: items,
-      ),
-    );
-  }
-
-  Widget _buildScrollableMyProductGrid(BuildContext context, List<Map<String, dynamic>> products) {
-    List<Widget> items = products.map((product) {
-      return _buildMarketItem(context, product['name']!, product['price']!, product['image']!);
-    }).toList();
-
-    return SizedBox(
-      height: 280,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children: items,
+        itemCount: products.length,
+        itemBuilder: (context, index) {
+          final product = products[index];
+          return _buildMarketItem(
+            context,
+            product['name'],
+            product['price'],
+            product['image'],
+          );
+        },
       ),
     );
   }
 
   Widget _buildScrollableMyCharityGrid() {
-    List<Widget> items = myCharityDonations.map((product) {
-      return _buildMarketItem(null, product['name']!, product['price']!, product['image']!);
-    }).toList();
-
     return SizedBox(
-      height: 270,
-      child: ListView(
+      height: 250,
+      child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        children: items,
+        itemCount: myCharityDonations.length,
+        itemBuilder: (context, index) {
+          final product = myCharityDonations[index];
+          return _buildMarketItem(
+            context,
+            product['name'],
+            product['price'],
+            product['image'],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildMarketItem(BuildContext? context, String name, String price, String image) {
+  Widget _buildScrollableProductGrid(
+    BuildContext context,
+    List<Map<String, dynamic>> products,
+  ) {
+    List<Widget> items;
+    if (selectedCategory == "All") {
+      items = [
+        _buildMarketItem(
+          context,
+          "Dell Optiplex",
+          "₦79,000",
+          "assets/images/laptop1.png",
+        ),
+        _buildMarketItem(
+          context,
+          "Google Pixel 9pro XL",
+          "₦189,000",
+          "assets/images/pixel9.png",
+        ),
+        _buildMarketItem(
+          context,
+          "JBL Home",
+          "₦69,000",
+          "assets/images/jbl_home.png",
+        ),
+        _buildMarketItem(
+          context,
+          "Clothing Item 1",
+          "₦5,000",
+          "assets/images/clothes1.png",
+        ),
+      ];
+    } else if (selectedCategory == "E-Waste") {
+      items = [
+        _buildMarketItem(
+          context,
+          "Dell Optiplex",
+          "₦79,000",
+          "assets/images/laptop1.png",
+        ),
+        _buildMarketItem(
+          context,
+          "Google Pixel 9pro XL",
+          "₦189,000",
+          "assets/images/pixel9.png",
+        ),
+        _buildMarketItem(
+          context,
+          "JBL Home",
+          "₦69,000",
+          "assets/images/jbl_home.png",
+        ),
+      ];
+    } else if (selectedCategory == "Clothing") {
+      items = [
+        _buildMarketItem(
+          context,
+          "Clothing Item 1",
+          "₦5,000",
+          "assets/images/clothes1.png",
+        ),
+        _buildMarketItem(
+          context,
+          "Clothing Item 2",
+          "₦7,000",
+          "assets/images/clothes2.png",
+        ),
+        _buildMarketItem(
+          context,
+          "Clothing Item 3",
+          "₦6,000",
+          "assets/images/clothes3.jpeg",
+        ),
+        _buildMarketItem(
+          context,
+          "Clothing Item 4",
+          "₦8,000",
+          "assets/images/clothes4.jpeg",
+        ),
+      ];
+    } else if (selectedCategory == "Appliances") {
+      items = [
+        _buildMarketItem(
+          context,
+          "House Appliance Item 1",
+          "₦15,000",
+          "assets/images/pot.jpeg",
+        ),
+        _buildMarketItem(
+          context,
+          "House Appliance 2",
+          "₦18,000",
+          "assets/images/vase1.jpeg",
+        ),
+        _buildMarketItem(
+          context,
+          "House Appliance 3",
+          "₦25,000",
+          "assets/images/table.jpeg",
+        ),
+        _buildMarketItem(
+          context,
+          "House Appliance 4",
+          "₦20,000",
+          "assets/images/gas.jpeg",
+        ),
+      ];
+    } else if (selectedCategory == "Metal Waste") {
+      items = [
+        _buildMarketItem(
+          context,
+          "Metal Waste Item 1",
+          "₦10,000",
+          "assets/images/metal1.jpeg",
+        ),
+        _buildMarketItem(
+          context,
+          "Metal Waste Item 2",
+          "₦12,000",
+          "assets/images/metal2.jpeg",
+        ),
+        _buildMarketItem(
+          context,
+          "Metal Waste Item 3",
+          "₦15,000",
+          "assets/images/metal3.jpeg",
+        ),
+        _buildMarketItem(
+          context,
+          "Metal Waste Item 4",
+          "₦20,000",
+          "assets/images/metal4.jpeg",
+        ),
+      ];
+    } else if (selectedCategory == "Construction") {
+      items = [
+        _buildMarketItem(
+          context,
+          "Construction Item 1",
+          "₦50,000",
+          "assets/images/construction1.jpeg",
+        ),
+        _buildMarketItem(
+          context,
+          "Construction Item 2",
+          "₦70,000",
+          "assets/images/construction2.jpeg",
+        ),
+        _buildMarketItem(
+          context,
+          "Construction Item 3",
+          "₦60,000",
+          "assets/images/construction3.jpeg",
+        ),
+        _buildMarketItem(
+          context,
+          "Construction Item 4",
+          "₦80,000",
+          "assets/images/construction4.jpeg",
+        ),
+      ];
+    } else {
+      items = [];
+    }
+
+    return SizedBox(
+      height: 250,
+      child: ListView(scrollDirection: Axis.horizontal, children: items),
+    );
+  }
+
+  Widget _buildScrollableCharityGrid() {
+    return SizedBox(
+      height: 250,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          _buildMarketItem(
+            null,
+            "Dell Optiplex",
+            "FREE",
+            "assets/images/laptop1.png",
+          ),
+          _buildMarketItem(
+            null,
+            "Clothes",
+            "FREE",
+            "assets/images/clothes1.png",
+          ),
+          _buildMarketItem(null, "Big Pot", "FREE", "assets/images/pot.jpeg"),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMarketItem(
+    BuildContext? context,
+    String name,
+    String price,
+    String image,
+    {String? productId}
+  ) {
     return GestureDetector(
-      onTap: context != null
-          ? () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ProductDetailPage(
-                    image: image,
-                    name: name,
-                    price: price,
-                    oldPrice: price == "FREE" ? "" : "₦100,000",
+      onTap:
+          context != null
+              ? () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (context) => ProductDetailPage(
+                          image: image,
+                          name: name,
+                          price: price,
+                          oldPrice: price == "FREE" ? "" : "₦100,000",
+                        ),
                   ),
-                ),
-              );
-            }
-          : null,
+                );
+              }
+              : null,
       child: Container(
         width: 160,
-        height: 200,
+        height: 270,
         margin: const EdgeInsets.only(right: 10),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -369,6 +630,7 @@ class _MarketPageState extends State<MarketPage> {
           ],
         ),
         padding: const EdgeInsets.all(8.0),
+        child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -376,7 +638,10 @@ class _MarketPageState extends State<MarketPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green,
                     borderRadius: BorderRadius.circular(8),
@@ -392,7 +657,12 @@ class _MarketPageState extends State<MarketPage> {
             const SizedBox(height: 8),
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(image, fit: BoxFit.cover, height: 120, width: double.infinity),
+              child: Image.asset(
+                image,
+                fit: BoxFit.cover,
+                height: 120,
+                width: double.infinity,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -407,14 +677,21 @@ class _MarketPageState extends State<MarketPage> {
               children: [
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.green.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       price,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
                     ),
                   ),
                 ),
@@ -429,8 +706,34 @@ class _MarketPageState extends State<MarketPage> {
                 ),
               ],
             ),
+            // Add these lines inside the Column widget in the _buildMarketItem method
+            if (context != null) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [     
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () async {
+                      // Handle delete product
+                      await FirebaseFirestore.instance
+                          .collection('products')
+                          .doc(
+                            productId,
+                          ) // Use the product ID to delete the product
+                          .delete();
+                      setState(() {
+                        myProductsForSale.removeWhere(
+                          (product) => product['id'] == productId,
+                        );
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
+        )
       ),
     );
   }

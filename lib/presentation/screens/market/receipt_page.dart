@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'order_confirmation_page.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:jaclean/blocs/market/cart_bloc.dart';
 
 class ReceiptPage extends StatelessWidget {
   final String refNumber;
@@ -104,6 +106,7 @@ class ReceiptPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
                 ),
                 onPressed: () {
+                  context.read<CartBloc>().add(ClearCart());
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(

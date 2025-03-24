@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'cart_provider.dart';
 import 'checkout_page.dart';
+import 'package:jaclean/blocs/market/cart_bloc.dart';
 
 class ShoppingCartPage extends StatelessWidget {
   const ShoppingCartPage({super.key});
@@ -31,20 +31,23 @@ class ShoppingCartPage extends StatelessWidget {
         child: Column(
           children: [
             Expanded(
-              child: Consumer<CartProvider>(
-                builder: (context, cart, child) {
-                  return ListView.builder(
-                    itemCount: cart.cartItems.length,
-                    itemBuilder: (context, index) {
-                      final item = cart.cartItems[index];
-                      return _buildCartItem(
-                        context: context,
-                        image: item['image']!,
-                        name: item['name']!,
-                        price: item['price']!,
-                      );
-                    },
-                  );
+              child: BlocBuilder<CartBloc, CartState>(
+                builder: (context, state) {
+                  if (state is CartUpdated) {
+                    return ListView.builder(
+                      itemCount: state.cartItems.length,
+                      itemBuilder: (context, index) {
+                        final item = state.cartItems[index];
+                        return _buildCartItem(
+                          context: context,
+                          image: item['image']!,
+                          name: item['name']!,
+                          price: item['price']!,
+                        );
+                      },
+                    );
+                  }
+                  return const Center(child: Text("Your cart is empty"));
                 },
               ),
             ),
@@ -72,7 +75,7 @@ class ShoppingCartPage extends StatelessWidget {
             const SizedBox(width: 8),
             GestureDetector(
               onTap: () {
-                Provider.of<CartProvider>(context, listen: false).removeItem(name);
+                context.read<CartBloc>().add(RemoveItem(name: name));
               },
               child: const Icon(Icons.close, color: Colors.grey),
             ),
@@ -101,45 +104,54 @@ class ShoppingCartPage extends StatelessWidget {
   }
 
   Widget _buildTotalSection(BuildContext context) {
-    final cart = Provider.of<CartProvider>(context);
-    double total = cart.cartItems.fold(0, (sum, item) => sum + double.parse(item['price']!.replaceAll('₦', '').replaceAll(',', '')));
+    return BlocBuilder<CartBloc, CartState>(
+      builder: (context, state) {
+        double total = 0;
+        if (state is CartUpdated) {
+          total = state.cartItems.fold(0, (sum, item) => sum + double.parse(item['price']!.replaceAll('₦', '').replaceAll(',', '')));
+        }
 
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return Column(
           children: [
-            const Text("Total:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Text(NumberFormat.currency(locale: 'en_NG', symbol: '₦').format(total), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Total:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(NumberFormat.currency(locale: 'en_NG', symbol: '₦').format(total), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            const Text("Order and get 34 points - Free shipping", style: TextStyle(color: Colors.grey)),
           ],
-        ),
-        const SizedBox(height: 4),
-        const Text("Order and get 34 points - Free shipping", style: TextStyle(color: Colors.grey)),
-      ],
+        );
+      },
     );
   }
 
   Widget _buildContinueButton(BuildContext context) {
-    final cart = Provider.of<CartProvider>(context);
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(top: 16),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-        ),
-        onPressed: cart.cartItems.isEmpty
-            ? null
-            : () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const CheckoutPage()),
-                );
-              },
-        child: const Text("Continue", style: TextStyle(fontSize: 16, color: Colors.white)),
-      ),
+    return BlocBuilder<CartBloc, CartState>(
+      builder: (context, state) {
+        return Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(top: 16),
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+            onPressed: state is CartUpdated && state.cartItems.isNotEmpty
+                ? () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const CheckoutPage()),
+                    );
+                  }
+                : null,
+            child: const Text("Continue", style: TextStyle(fontSize: 16, color: Colors.white)),
+          ),
+        );
+      },
     );
   }
 
