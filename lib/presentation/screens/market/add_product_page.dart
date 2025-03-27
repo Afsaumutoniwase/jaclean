@@ -307,6 +307,7 @@ class _AddProductPageState extends State<AddProductPage> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
+                    key: Key("Post"),
                     onPressed: _postProduct,
                     child: const Text("Post", style: TextStyle(fontSize: 16, color: Colors.white)),
                   ),
