@@ -22,7 +22,7 @@ class CustomSuccessDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-        height: 250,
+        height: 300,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
