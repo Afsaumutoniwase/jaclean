@@ -112,160 +112,163 @@ class _BankTransferPageState extends State<BankTransferPage> {
                 if (cartState is CartUpdated && widget.amount == null) {
                   total = cartState.cartItems.fold(0, (sum, item) => sum + double.parse(item['price']!.replaceAll('₦', '').replaceAll(',', '')));
                 }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "Please complete your payment in your banking app within",
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _formatTime(_remainingTime),
-                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      "Order total: ₦${total.toStringAsFixed(2)}",
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.2),
-                            spreadRadius: 2,
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "Account number:",
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                "8166372244",
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.copy, color: Colors.grey),
-                                onPressed: () {
-                                  Clipboard.setData(const ClipboardData(text: "8166372244"));
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Account number copied to clipboard')),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            "Bank name:",
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            "Palmpay",
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            "Beneficiary Name:",
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            "9JA-CLEAN-LTD",
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            "Amount to pay:",
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "₦${total.toStringAsFixed(2)}",
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.copy, color: Colors.grey),
-                                onPressed: () {
-                                  Clipboard.setData(ClipboardData(text: "₦${total.toStringAsFixed(2)}"));
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Amount copied to clipboard')),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            "Transfer exact amount to avoid failure.",
-                            style: TextStyle(fontSize: 14, color: Colors.orange),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      "We will follow up with a confirmation email once your payment is complete.",
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      "We will NOT charge you if the payment fails, and all items from this order will be returned to your cart.",
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 32),
-                    Center(
-                      child: BlocBuilder<BankTransferBloc, BankTransferState>(
-                        builder: (context, state) {
-                          if (state is BankTransferLoading) {
-                            return const CircularProgressIndicator();
-                          }
-                          return ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 32),
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Please complete your payment in your banking app within",
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
-                            onPressed: () {
-                              context.read<BankTransferBloc>().add(CompleteBankTransfer());
-                            },
-                            child: const Text("Done", style: TextStyle(fontSize: 16, color: Colors.white)),
-                          );
-                        },
+                            const SizedBox(height: 8),
+                            Text(
+                              _formatTime(_remainingTime),
+                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      Text(
+                        "Order total: ₦${total.toStringAsFixed(2)}",
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.2),
+                              spreadRadius: 2,
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Account number:",
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  "8166372244",
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.copy, color: Colors.grey),
+                                  onPressed: () {
+                                    Clipboard.setData(const ClipboardData(text: "8166372244"));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Account number copied to clipboard')),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              "Bank name:",
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              "Palmpay",
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              "Beneficiary Name:",
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              "9JA-CLEAN-LTD",
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              "Amount to pay:",
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "₦${total.toStringAsFixed(2)}",
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.copy, color: Colors.grey),
+                                  onPressed: () {
+                                    Clipboard.setData(ClipboardData(text: "₦${total.toStringAsFixed(2)}"));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Amount copied to clipboard')),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              "Transfer exact amount to avoid failure.",
+                              style: TextStyle(fontSize: 14, color: Colors.orange),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "We will follow up with a confirmation email once your payment is complete.",
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        "We will NOT charge you if the payment fails, and all items from this order will be returned to your cart.",
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 30),
+                      Center(
+                        child: BlocBuilder<BankTransferBloc, BankTransferState>(
+                          builder: (context, state) {
+                            if (state is BankTransferLoading) {
+                              return const CircularProgressIndicator();
+                            }
+                            return ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 32),
+                              ),
+                              onPressed: () {
+                                context.read<BankTransferBloc>().add(CompleteBankTransfer());
+                              },
+                              child: const Text("Done", style: TextStyle(fontSize: 16, color: Colors.white)),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),

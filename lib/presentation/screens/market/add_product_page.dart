@@ -32,12 +32,13 @@ class _AddProductPageState extends State<AddProductPage> {
     'assets/images/ewaste1.jpeg',
     'assets/images/gas.jpeg',
     'assets/images/pot.jpeg',
-    'assets/images/vase.jpeg',
+    'assets/images/vase1.jpeg',
   ];
 
   @override
   void initState() {
     super.initState();
+
     if (widget.product != null) {
       _productId = widget.product!['id'];
       _productNameController.text = widget.product!['name'];

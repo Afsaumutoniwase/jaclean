@@ -8,11 +8,13 @@ import 'package:jaclean/presentation/widgets/custom_container.dart';
 import 'package:jaclean/presentation/widgets/custom_elevated_btn.dart';
 import 'package:jaclean/presentation/widgets/custom_list_tile.dart';
 import 'package:jaclean/presentation/screens/profile/withdrawal_screen.dart';
-import 'package:jaclean/presentation/screens/profile/withdrawal_history.dart';
+
 import 'package:jaclean/presentation/screens/profile/change_password.dart';
 import 'package:jaclean/presentation/screens/profile/manage_bank_account_screen.dart';
 import 'package:jaclean/presentation/screens/profile/profile_account.dart';
 import 'package:jaclean/presentation/theme/app_colors.dart';
+
+import 'Withdrawal_History.dart';
 
 class MainProfile extends StatefulWidget {
   const MainProfile({super.key});

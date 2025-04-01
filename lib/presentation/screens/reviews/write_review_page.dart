@@ -64,96 +64,98 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
                 onPressed: () => Navigator.pop(context),
               ),
             ),
-            body: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Score:', style: TextStyle(fontSize: 16)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: List.generate(5, (index) {
-                      return IconButton(
-                        icon: Icon(
-                          index < _rating ? Icons.star : Icons.star_border,
-                          color: Colors.amber,
-                          size: 32,
-                        ),
-                        onPressed: () {
-                          setState(() => _rating = index + 1.0);
-                        },
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _reviewController,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Review',
+            body: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Score:', style: TextStyle(fontSize: 16)),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: List.generate(5, (index) {
+                        return IconButton(
+                          icon: Icon(
+                            index < _rating ? Icons.star : Icons.star_border,
+                            color: Colors.amber,
+                            size: 32,
+                          ),
+                          onPressed: () {
+                            setState(() => _rating = index + 1.0);
+                          },
+                        );
+                      }),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  GestureDetector(
-                    onTap: () {
-                      context.read<WriteReviewBloc>().add(PickImageEvent());
-                    },
-                    child: Container(
-                      height: 150,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _reviewController,
+                      maxLines: 4,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: 'Review',
                       ),
-                      child: _pickedImage != null
-                          ? Image.file(_pickedImage!, fit: BoxFit.cover)
-                          : widget.existingImage != null &&
-                                  widget.existingImage!.startsWith('http')
-                              ? Image.network(widget.existingImage!,
-                                  fit: BoxFit.cover)
-                              : const Center(
-                                  child: Icon(Icons.add, size: 50, color: Colors.grey),
-                                ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: state is WriteReviewLoading
-                          ? null
-                          : () {
-                              context.read<WriteReviewBloc>().add(
-                                    SubmitReviewEvent(
-                                      reviewId: widget.reviewId,
-                                      reviewText: _reviewController.text.trim(),
-                                      rating: _rating,
-                                      image: _pickedImage,
-                                      existingImage: widget.existingImage,
-                                    ),
-                                  );
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: () {
+                        context.read<WriteReviewBloc>().add(PickImageEvent());
+                      },
+                      child: Container(
+                        height: 150,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 14,
-                          horizontal: 24,
-                        ),
+                        child: _pickedImage != null
+                            ? Image.file(_pickedImage!, fit: BoxFit.cover)
+                            : widget.existingImage != null &&
+                                    widget.existingImage!.startsWith('http')
+                                ? Image.network(widget.existingImage!,
+                                    fit: BoxFit.cover)
+                                : const Center(
+                                    child: Icon(Icons.add, size: 50, color: Colors.grey),
+                                  ),
                       ),
-                      child: state is WriteReviewLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : Text(
-                              widget.reviewId != null
-                                  ? 'Update Review'
-                                  : 'Post Review',
-                              style: const TextStyle(fontSize: 16, color: Colors.white),
-                            ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: state is WriteReviewLoading
+                            ? null
+                            : () {
+                                context.read<WriteReviewBloc>().add(
+                                      SubmitReviewEvent(
+                                        reviewId: widget.reviewId,
+                                        reviewText: _reviewController.text.trim(),
+                                        rating: _rating,
+                                        image: _pickedImage,
+                                        existingImage: widget.existingImage,
+                                      ),
+                                    );
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                            horizontal: 24,
+                          ),
+                        ),
+                        child: state is WriteReviewLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                                widget.reviewId != null
+                                    ? 'Update Review'
+                                    : 'Post Review',
+                                style: const TextStyle(fontSize: 16, color: Colors.white),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
