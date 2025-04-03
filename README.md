@@ -6,6 +6,8 @@
 Jaclean is a feature-rich Flutter app designed to simplify electronic waste management and promote sustainability. It allows users to buy/sell/donate products, schedule pickups, find recycling centers, manage services, and leave reviews. Built with Firebase and Bloc for robust state management.
 
 ---
+## Link to the Demo Video: **Youtube** ([Click here](https://youtu.be/lNI8TIl0it8?si=E2f2UCw4bHRUmVPv))
+## Link to the APK Download: **Google drive** ([Click here](https://drive.google.com/file/d/1i7XK3641KPe4U3CrbONja2AizGjVoWyt/view?usp=sharing))
 
 
 ## 🚀 Features
