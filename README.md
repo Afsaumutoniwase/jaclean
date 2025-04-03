@@ -196,6 +196,11 @@ feat: complete end-to-end app flow from Auth → Reviews
 
 ---
 
+## Test results
+
+<img width="812" alt="image" src="https://github.com/user-attachments/assets/4d52083a-7627-447f-ba72-042db07e6bc9" />
+
+
 ## 👥 Team Members (Group 10)
 
 - **Lydia Ojoawo** ([@lydia02](https://github.com/lydia02))
